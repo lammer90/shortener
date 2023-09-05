@@ -1,14 +1,18 @@
 package storage
 
-type MockStorage map[string]string
+type mockStorage map[string]string
 
-func (m MockStorage) Save(id string, value string) {
+func (m mockStorage) Save(id string, value string) {
 	m[id] = value
 }
 
-func (m MockStorage) Find(id string) (string, bool) {
+func (m mockStorage) Find(id string) (string, bool) {
 	val, ok := m[id]
 	return val, ok
 }
 
-var MockStorageImpl MockStorage = make(map[string]string)
+var mockStorageImpl mockStorage = make(map[string]string)
+
+func GetStorage() Repository {
+	return mockStorageImpl
+}

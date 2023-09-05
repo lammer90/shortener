@@ -8,33 +8,43 @@ import (
 	"strings"
 )
 
-func ToShort(res http.ResponseWriter, req *http.Request) {
+type shortenerHandler struct {
+	repository storage.Repository
+}
+
+func GetShortenerHandler() http.Handler {
+	return shortenerHandler{
+		repository: storage.GetStorage(),
+	}
+}
+
+func (s shortenerHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost && util.CheckContentHeader(req) {
-		post(&res, req)
+		post(&res, req, s.repository)
 		return
 	}
 	if req.Method == http.MethodGet {
-		get(&res, req)
+		get(&res, req, s.repository)
 		return
 	}
 	res.WriteHeader(http.StatusBadRequest)
 }
 
-func post(res *http.ResponseWriter, req *http.Request) {
+func post(res *http.ResponseWriter, req *http.Request, repository storage.Repository) {
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		(*res).WriteHeader(http.StatusBadRequest)
 		return
 	}
-	storage.MockStorageImpl.Save("EwHXdJfB", string(body[:]))
+	repository.Save("EwHXdJfB", string(body[:]))
 	(*res).Header().Set("content-type", "text/plain")
 	(*res).WriteHeader(http.StatusCreated)
 	(*res).Write([]byte("http://localhost:8080/" + "EwHXdJfB"))
 }
 
-func get(res *http.ResponseWriter, req *http.Request) {
+func get(res *http.ResponseWriter, req *http.Request, repository storage.Repository) {
 	arr := strings.Split(req.URL.String(), "/")
-	address, ok := storage.MockStorageImpl.Find(arr[len(arr)-1])
+	address, ok := repository.Find(arr[len(arr)-1])
 	if !ok {
 		(*res).WriteHeader(http.StatusBadRequest)
 		return

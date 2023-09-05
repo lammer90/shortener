@@ -7,7 +7,7 @@ import (
 
 func main() {
 	mux := http.NewServeMux()
-	mux.HandleFunc(`/`, handlers.ToShort)
+	mux.Handle(`/`, handlers.GetShortenerHandler())
 
 	err := http.ListenAndServe(`localhost:8080`, mux)
 	if err != nil {
