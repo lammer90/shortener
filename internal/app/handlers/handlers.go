@@ -12,14 +12,14 @@ type shortenerHandler struct {
 	repository storage.Repository
 }
 
-func GetShortenerHandler() http.Handler {
+func GetShortenerHandler(repository storage.Repository) http.Handler {
 	return shortenerHandler{
-		repository: storage.GetStorage(),
+		repository: repository,
 	}
 }
 
 func (s shortenerHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	if req.Method == http.MethodPost && util.CheckContentHeader(req) {
+	if req.Method == http.MethodPost {
 		post(&res, req, s.repository)
 		return
 	}
@@ -32,7 +32,7 @@ func (s shortenerHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) 
 
 func post(res *http.ResponseWriter, req *http.Request, repository storage.Repository) {
 	body, err := io.ReadAll(req.Body)
-	if err != nil {
+	if err != nil || !util.CheckContentHeader(req) || !util.ValidPostUrl(req.URL.String()) || len(body) == 0 {
 		(*res).WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -45,7 +45,7 @@ func post(res *http.ResponseWriter, req *http.Request, repository storage.Reposi
 func get(res *http.ResponseWriter, req *http.Request, repository storage.Repository) {
 	arr := strings.Split(req.URL.String(), "/")
 	address, ok := repository.Find(arr[len(arr)-1])
-	if !ok {
+	if !ok || !util.ValidGetUrl(req.URL.String()) {
 		(*res).WriteHeader(http.StatusBadRequest)
 		return
 	}
