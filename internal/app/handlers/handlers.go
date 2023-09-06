@@ -32,7 +32,7 @@ func (s shortenerHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) 
 
 func post(res *http.ResponseWriter, req *http.Request, repository storage.Repository) {
 	body, err := io.ReadAll(req.Body)
-	if err != nil || !util.CheckContentHeader(req) || !util.ValidPostUrl(req.URL.String()) || len(body) == 0 {
+	if err != nil || !util.CheckContentHeader(req) || !util.ValidPostURL(req.URL.String()) || len(body) == 0 {
 		(*res).WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -45,7 +45,7 @@ func post(res *http.ResponseWriter, req *http.Request, repository storage.Reposi
 func get(res *http.ResponseWriter, req *http.Request, repository storage.Repository) {
 	arr := strings.Split(req.URL.String(), "/")
 	address, ok := repository.Find(arr[len(arr)-1])
-	if !ok || !util.ValidGetUrl(req.URL.String()) {
+	if !ok || !util.ValidGetURL(req.URL.String()) {
 		(*res).WriteHeader(http.StatusBadRequest)
 		return
 	}
