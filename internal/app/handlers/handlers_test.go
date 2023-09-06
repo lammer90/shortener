@@ -25,7 +25,7 @@ var testStorageImpl testStorage = make(map[string]string)
 func TestGetShortenerHandler(t *testing.T) {
 	type request struct {
 		requestMethod string
-		requestUrl    string
+		requestURL    string
 		requestBody   string
 	}
 	type want struct {
@@ -44,7 +44,7 @@ func TestGetShortenerHandler(t *testing.T) {
 			name: "negative test POST 1",
 			request: request{
 				requestMethod: "POST",
-				requestUrl:    "/test",
+				requestURL:    "/test",
 				requestBody:   "https://practicum.yandex.ru/",
 			},
 			want: want{
@@ -59,7 +59,7 @@ func TestGetShortenerHandler(t *testing.T) {
 			name: "negative test POST 2",
 			request: request{
 				requestMethod: "POST",
-				requestUrl:    "/",
+				requestURL:    "/",
 				requestBody:   "",
 			},
 			want: want{
@@ -74,7 +74,7 @@ func TestGetShortenerHandler(t *testing.T) {
 			name: "positive test POST",
 			request: request{
 				requestMethod: "POST",
-				requestUrl:    "/",
+				requestURL:    "/",
 				requestBody:   "https://practicum.yandex.ru/",
 			},
 			want: want{
@@ -89,7 +89,7 @@ func TestGetShortenerHandler(t *testing.T) {
 			name: "negative test GET 1",
 			request: request{
 				requestMethod: "GET",
-				requestUrl:    "/EwHXdJfB/test",
+				requestURL:    "/EwHXdJfB/test",
 				requestBody:   "",
 			},
 			want: want{
@@ -104,7 +104,7 @@ func TestGetShortenerHandler(t *testing.T) {
 			name: "negative test GET 2",
 			request: request{
 				requestMethod: "GET",
-				requestUrl:    "/EwHXdJf",
+				requestURL:    "/EwHXdJf",
 				requestBody:   "",
 			},
 			want: want{
@@ -119,7 +119,7 @@ func TestGetShortenerHandler(t *testing.T) {
 			name: "positive test GET",
 			request: request{
 				requestMethod: "GET",
-				requestUrl:    "/EwHXdJfB",
+				requestURL:    "/EwHXdJfB",
 				requestBody:   "",
 			},
 			want: want{
@@ -133,7 +133,7 @@ func TestGetShortenerHandler(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			request := httptest.NewRequest(test.request.requestMethod, test.request.requestUrl, strings.NewReader(test.request.requestBody))
+			request := httptest.NewRequest(test.request.requestMethod, test.request.requestURL, strings.NewReader(test.request.requestBody))
 			request.Header.Set("Content-Type", "text/plain")
 
 			w := httptest.NewRecorder()
