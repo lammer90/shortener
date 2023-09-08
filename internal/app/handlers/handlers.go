@@ -1,11 +1,11 @@
 package handlers
 
 import (
-	"github.com/go-chi/chi/v5"
 	"github.com/lammer90/shortener/internal/app/storage"
 	"github.com/lammer90/shortener/internal/app/util"
 	"io"
 	"net/http"
+	"strings"
 )
 
 type shortenerHandler struct {
@@ -31,8 +31,8 @@ func (s shortenerHandler) Post(res http.ResponseWriter, req *http.Request) {
 }
 
 func (s shortenerHandler) Get(res http.ResponseWriter, req *http.Request) {
-	short := chi.URLParam(req, "short")
-	address, ok := s.repository.Find(short)
+	arr := strings.Split(req.URL.String(), "/")
+	address, ok := s.repository.Find(arr[len(arr)-1])
 	if !ok || !util.ValidGetURL(req.URL.String()) {
 		res.WriteHeader(http.StatusBadRequest)
 		return
