@@ -140,6 +140,7 @@ func TestGetShortenerHandler(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			req, err := http.NewRequest(test.request.requestMethod, ts.URL+test.request.requestURL, strings.NewReader(test.request.requestBody))
+			require.NoError(t, err)
 			req.Header.Set("Content-Type", "text/plain")
 
 			resp, err := ts.Client().Do(req)
