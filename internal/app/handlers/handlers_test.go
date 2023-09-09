@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/lammer90/shortener/config/flags"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -23,6 +24,7 @@ func (t testStorage) Find(id string) (string, bool) {
 var testStorageImpl testStorage = make(map[string]string)
 
 func TestGetShortenerHandler(t *testing.T) {
+	flags.InitFlags()
 	type request struct {
 		requestMethod string
 		requestURL    string

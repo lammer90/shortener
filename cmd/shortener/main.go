@@ -11,7 +11,7 @@ import (
 func main() {
 	flags.InitFlags()
 	handler := handlers.GetShortenerHandler(storage.GetStorage())
-	http.ListenAndServe(*flags.A, ShortenerRouter(handler.Post, handler.Get))
+	http.ListenAndServe(flags.ServAddress, ShortenerRouter(handler.Post, handler.Get))
 }
 
 func ShortenerRouter(postFunc func(http.ResponseWriter, *http.Request), getFunc func(http.ResponseWriter, *http.Request)) chi.Router {
