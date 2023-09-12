@@ -1,17 +1,22 @@
 package main
 
 import (
+	"github.com/go-chi/chi/v5"
+	"github.com/lammer90/shortener/config/flags"
 	"github.com/lammer90/shortener/internal/app/handlers"
 	"github.com/lammer90/shortener/internal/app/storage"
 	"net/http"
 )
 
 func main() {
-	mux := http.NewServeMux()
-	mux.Handle(`/`, handlers.GetShortenerHandler(storage.GetStorage()))
+	flags.InitFlags()
+	handler := handlers.GetShortenerHandler(storage.GetStorage())
+	http.ListenAndServe(flags.ServAddress, ShortenerRouter(handler.Post, handler.Get))
+}
 
-	err := http.ListenAndServe(`localhost:8080`, mux)
-	if err != nil {
-		panic(err)
-	}
+func ShortenerRouter(postFunc func(http.ResponseWriter, *http.Request), getFunc func(http.ResponseWriter, *http.Request)) chi.Router {
+	r := chi.NewRouter()
+	r.Post("/", postFunc)
+	r.Get("/{short}", getFunc)
+	return r
 }

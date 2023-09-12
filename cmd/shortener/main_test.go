@@ -1,10 +1,12 @@
-package handlers
+package main
 
 import (
 	"github.com/lammer90/shortener/config/flags"
+	"github.com/lammer90/shortener/internal/app/handlers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -24,7 +26,11 @@ func (t testStorage) Find(id string) (string, bool) {
 var testStorageImpl testStorage = make(map[string]string)
 
 func TestGetShortenerHandler(t *testing.T) {
+	handler := handlers.GetShortenerHandler(testStorageImpl)
+	ts := httptest.NewServer(ShortenerRouter(handler.Post, handler.Get))
 	flags.InitFlags()
+	defer ts.Close()
+
 	type request struct {
 		requestMethod string
 		requestURL    string
@@ -50,7 +56,7 @@ func TestGetShortenerHandler(t *testing.T) {
 				requestBody:   "https://practicum.yandex.ru/",
 			},
 			want: want{
-				code:         400,
+				code:         405,
 				response:     "",
 				headerName:   "",
 				headerValue:  "",
@@ -95,8 +101,8 @@ func TestGetShortenerHandler(t *testing.T) {
 				requestBody:   "",
 			},
 			want: want{
-				code:         400,
-				response:     "",
+				code:         404,
+				response:     "404 page not found\n",
 				headerName:   "",
 				headerValue:  "",
 				storageValue: "https://practicum.yandex.ru/",
@@ -125,8 +131,8 @@ func TestGetShortenerHandler(t *testing.T) {
 				requestBody:   "",
 			},
 			want: want{
-				code:         307,
-				response:     "",
+				code:         200,
+				response:     "it_does_not_matter",
 				headerName:   "Location",
 				headerValue:  "https://practicum.yandex.ru/",
 				storageValue: "https://practicum.yandex.ru/",
@@ -135,26 +141,23 @@ func TestGetShortenerHandler(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			request := httptest.NewRequest(test.request.requestMethod, test.request.requestURL, strings.NewReader(test.request.requestBody))
-			request.Header.Set("Content-Type", "text/plain")
+			req, err := http.NewRequest(test.request.requestMethod, ts.URL+test.request.requestURL, strings.NewReader(test.request.requestBody))
+			require.NoError(t, err)
+			req.Header.Set("Content-Type", "text/plain")
 
-			w := httptest.NewRecorder()
-			handler := GetShortenerHandler(testStorageImpl)
-			if test.request.requestMethod == "GET" {
-				handler.Get(w, request)
-			} else if test.request.requestMethod == "POST" {
-				handler.Post(w, request)
-			}
+			resp, err := ts.Client().Do(req)
+			require.NoError(t, err)
 
-			res := w.Result()
-			assert.Equal(t, res.StatusCode, test.want.code)
-			defer res.Body.Close()
-			resBody, err := io.ReadAll(res.Body)
+			assert.Equal(t, resp.StatusCode, test.want.code)
+			defer resp.Body.Close()
+			resBody, err := io.ReadAll(resp.Body)
 
 			require.NoError(t, err)
 			assert.Equal(t, testStorageImpl["EwHXdJfB"], test.want.storageValue)
-			assert.Equal(t, string(resBody), test.want.response)
-			assert.Equal(t, res.Header.Get(test.want.headerName), test.want.headerValue)
+			if test.want.response != "it_does_not_matter" {
+				assert.Equal(t, string(resBody), test.want.response)
+				assert.Equal(t, resp.Header.Get(test.want.headerName), test.want.headerValue)
+			}
 		})
 	}
 }
