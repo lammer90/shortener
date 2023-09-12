@@ -28,7 +28,7 @@ func (s shortenerHandler) Post(res http.ResponseWriter, req *http.Request) {
 	s.repository.Save("EwHXdJfB", string(body[:]))
 	res.Header().Set("content-type", "text/plain")
 	res.WriteHeader(http.StatusCreated)
-	res.Write([]byte(*flags.B + "/" + "EwHXdJfB"))
+	res.Write([]byte(flags.BaseURL + "/" + "EwHXdJfB"))
 }
 
 func (s shortenerHandler) Get(res http.ResponseWriter, req *http.Request) {
