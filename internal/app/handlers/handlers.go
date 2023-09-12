@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/lammer90/shortener/config/flags"
 	"github.com/lammer90/shortener/internal/app/storage"
 	"github.com/lammer90/shortener/internal/app/util"
 	"io"
@@ -27,7 +28,7 @@ func (s shortenerHandler) Post(res http.ResponseWriter, req *http.Request) {
 	s.repository.Save("EwHXdJfB", string(body[:]))
 	res.Header().Set("content-type", "text/plain")
 	res.WriteHeader(http.StatusCreated)
-	res.Write([]byte("http://localhost:8080/" + "EwHXdJfB"))
+	res.Write([]byte(flags.BaseURL + "/" + "EwHXdJfB"))
 }
 
 func (s shortenerHandler) Get(res http.ResponseWriter, req *http.Request) {

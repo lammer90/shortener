@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/lammer90/shortener/config/flags"
 	"github.com/lammer90/shortener/internal/app/handlers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -27,6 +28,7 @@ var testStorageImpl testStorage = make(map[string]string)
 func TestGetShortenerHandler(t *testing.T) {
 	handler := handlers.GetShortenerHandler(testStorageImpl)
 	ts := httptest.NewServer(ShortenerRouter(handler.Post, handler.Get))
+	flags.InitFlags()
 	defer ts.Close()
 
 	type request struct {
