@@ -12,3 +12,11 @@ func CheckContentHeader(req *http.Request) bool {
 	}
 	return false
 }
+
+func ValidPostURL(url string) bool {
+	return url == "/"
+}
+
+func ValidGetURL(url string) bool {
+	return strings.Count(url, "/") == 1
+}
