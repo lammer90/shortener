@@ -13,7 +13,7 @@ type ShortenerProvider interface {
 	Find(string) (string, bool)
 }
 
-func SaveShortUrl(provider ShortenerProvider) func(res http.ResponseWriter, req *http.Request) {
+func SaveShortURL(provider ShortenerProvider) func(res http.ResponseWriter, req *http.Request) {
 	return func(res http.ResponseWriter, req *http.Request) {
 		body, err := io.ReadAll(req.Body)
 		if err != nil || !util.CheckContentHeader(req) || !util.ValidPostURL(req.URL.String()) || len(body) == 0 {
@@ -28,7 +28,7 @@ func SaveShortUrl(provider ShortenerProvider) func(res http.ResponseWriter, req 
 
 }
 
-func FindByShortUrl(provider ShortenerProvider) func(res http.ResponseWriter, req *http.Request) {
+func FindByShortURL(provider ShortenerProvider) func(res http.ResponseWriter, req *http.Request) {
 	return func(res http.ResponseWriter, req *http.Request) {
 		arr := strings.Split(req.URL.String(), "/")
 		address, ok := provider.Find(arr[len(arr)-1])

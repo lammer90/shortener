@@ -11,7 +11,7 @@ import (
 func main() {
 	config.InitConfig()
 	provider := inmemory.GetStorage()
-	http.ListenAndServe(config.ServAddress, ShortenerRouter(handlers.SaveShortUrl(provider), handlers.FindByShortUrl(provider)))
+	http.ListenAndServe(config.ServAddress, ShortenerRouter(handlers.SaveShortURL(provider), handlers.FindByShortURL(provider)))
 }
 
 func ShortenerRouter(postFunc func(http.ResponseWriter, *http.Request), getFunc func(http.ResponseWriter, *http.Request)) chi.Router {
