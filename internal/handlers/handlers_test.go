@@ -24,7 +24,7 @@ func (t testStorage) Find(id string) (string, bool) {
 var testStorageImpl testStorage = make(map[string]string)
 
 func TestGetShortenerHandler(t *testing.T) {
-	config.InitFlags()
+	config.InitConfig()
 	type request struct {
 		requestMethod string
 		requestURL    string
