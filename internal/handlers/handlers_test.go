@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"github.com/lammer90/shortener/config/flags"
+	"github.com/lammer90/shortener/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -24,7 +24,7 @@ func (t testStorage) Find(id string) (string, bool) {
 var testStorageImpl testStorage = make(map[string]string)
 
 func TestGetShortenerHandler(t *testing.T) {
-	flags.InitFlags()
+	config.InitFlags()
 	type request struct {
 		requestMethod string
 		requestURL    string
@@ -139,11 +139,10 @@ func TestGetShortenerHandler(t *testing.T) {
 			request.Header.Set("Content-Type", "text/plain")
 
 			w := httptest.NewRecorder()
-			handler := GetShortenerHandler(testStorageImpl)
 			if test.request.requestMethod == "GET" {
-				handler.Get(w, request)
+				FindByShortUrl(testStorageImpl)(w, request)
 			} else if test.request.requestMethod == "POST" {
-				handler.Post(w, request)
+				SaveShortUrl(testStorageImpl)(w, request)
 			}
 
 			res := w.Result()

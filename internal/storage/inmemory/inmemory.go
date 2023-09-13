@@ -1,4 +1,6 @@
-package storage
+package inmemory
+
+import "github.com/lammer90/shortener/internal/storage"
 
 type mockStorage map[string]string
 
@@ -13,6 +15,6 @@ func (m mockStorage) Find(id string) (string, bool) {
 
 var mockStorageImpl mockStorage = make(map[string]string)
 
-func GetStorage() Repository {
+func GetStorage() storage.Repository {
 	return mockStorageImpl
 }
