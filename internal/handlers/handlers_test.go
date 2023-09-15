@@ -139,10 +139,11 @@ func TestGetShortenerHandler(t *testing.T) {
 			request.Header.Set("Content-Type", "text/plain")
 
 			w := httptest.NewRecorder()
+			handler := New(testStorageImpl)
 			if test.request.requestMethod == "GET" {
-				FindByShortURL(testStorageImpl)(w, request)
+				handler.FindByShortURL(w, request)
 			} else if test.request.requestMethod == "POST" {
-				SaveShortURL(testStorageImpl)(w, request)
+				handler.SaveShortURL(w, request)
 			}
 
 			res := w.Result()

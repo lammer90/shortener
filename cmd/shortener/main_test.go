@@ -26,7 +26,8 @@ func (t testStorage) Find(id string) (string, bool) {
 var testStorageImpl testStorage = make(map[string]string)
 
 func TestGetShortenerHandler(t *testing.T) {
-	ts := httptest.NewServer(ShortenerRouter(handlers.SaveShortURL(testStorageImpl), handlers.FindByShortURL(testStorageImpl)))
+	handler := handlers.New(testStorageImpl)
+	ts := httptest.NewServer(shortenerRouter(handler.SaveShortURL, handler.FindByShortURL))
 	config.InitConfig()
 	defer ts.Close()
 

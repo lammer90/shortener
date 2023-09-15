@@ -15,6 +15,6 @@ func (m mockStorage) Find(id string) (string, bool) {
 
 var mockStorageImpl mockStorage = make(map[string]string)
 
-func GetStorage() storage.Repository {
+func New() storage.Repository {
 	return mockStorageImpl
 }
