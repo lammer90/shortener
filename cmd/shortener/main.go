@@ -11,13 +11,12 @@ import (
 
 func main() {
 	config.InitConfig()
-	handler := handlers.New(inmemory.New(), base64generator.New())
-	http.ListenAndServe(config.ServAddress, shortenerRouter(handler.SaveShortURL, handler.FindByShortURL))
+	http.ListenAndServe(config.ServAddress, shortenerRouter(handlers.New(inmemory.New(), base64generator.New())))
 }
 
-func shortenerRouter(postFunc func(http.ResponseWriter, *http.Request), getFunc func(http.ResponseWriter, *http.Request)) chi.Router {
+func shortenerRouter(handler handlers.ShortenerHandler) chi.Router {
 	r := chi.NewRouter()
-	r.Post("/", postFunc)
-	r.Get("/{short}", getFunc)
+	r.Post("/", handler.SaveShortURL)
+	r.Get("/{short}", handler.FindByShortURL)
 	return r
 }

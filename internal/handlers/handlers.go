@@ -17,19 +17,19 @@ type urlGeneratorProvider interface {
 	GenerateURL(string) string
 }
 
-type shortenerHandler struct {
+type ShortenerHandler struct {
 	shortenerStorageProvider
 	urlGeneratorProvider
 }
 
-func New(storage shortenerStorageProvider, generator urlGeneratorProvider) shortenerHandler {
-	return shortenerHandler{
+func New(storage shortenerStorageProvider, generator urlGeneratorProvider) ShortenerHandler {
+	return ShortenerHandler{
 		storage,
 		generator,
 	}
 }
 
-func (s shortenerHandler) SaveShortURL(res http.ResponseWriter, req *http.Request) {
+func (s ShortenerHandler) SaveShortURL(res http.ResponseWriter, req *http.Request) {
 	body, err := io.ReadAll(req.Body)
 	if err != nil || !util.CheckContentHeader(req) || !util.ValidPostURL(req.URL.String()) || len(body) == 0 {
 		res.WriteHeader(http.StatusBadRequest)
@@ -42,7 +42,7 @@ func (s shortenerHandler) SaveShortURL(res http.ResponseWriter, req *http.Reques
 	res.Write([]byte(config.BaseURL + "/" + shortURL))
 }
 
-func (s shortenerHandler) FindByShortURL(res http.ResponseWriter, req *http.Request) {
+func (s ShortenerHandler) FindByShortURL(res http.ResponseWriter, req *http.Request) {
 	arr := strings.Split(req.URL.String(), "/")
 	address, ok := s.Find(arr[len(arr)-1])
 	if !ok || !util.ValidGetURL(req.URL.String()) {
