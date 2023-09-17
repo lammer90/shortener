@@ -23,6 +23,14 @@ func (t testStorage) Find(id string) (string, bool) {
 
 var testStorageImpl testStorage = make(map[string]string)
 
+type mockGenerator struct{}
+
+func (m mockGenerator) GenerateURL(data string) string {
+	return "EwHXdJfB"
+}
+
+var mockGeneratorImpl = mockGenerator{}
+
 func TestGetShortenerHandler(t *testing.T) {
 	config.InitConfig()
 	type request struct {
@@ -139,7 +147,7 @@ func TestGetShortenerHandler(t *testing.T) {
 			request.Header.Set("Content-Type", "text/plain")
 
 			w := httptest.NewRecorder()
-			handler := New(testStorageImpl)
+			handler := New(testStorageImpl, mockGeneratorImpl)
 			if test.request.requestMethod == "GET" {
 				handler.FindByShortURL(w, request)
 			} else if test.request.requestMethod == "POST" {

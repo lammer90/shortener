@@ -25,8 +25,16 @@ func (t testStorage) Find(id string) (string, bool) {
 
 var testStorageImpl testStorage = make(map[string]string)
 
+type mockGenerator struct{}
+
+func (m mockGenerator) GenerateURL(data string) string {
+	return "EwHXdJfB"
+}
+
+var mockGeneratorImpl = mockGenerator{}
+
 func TestGetShortenerHandler(t *testing.T) {
-	handler := handlers.New(testStorageImpl)
+	handler := handlers.New(testStorageImpl, mockGeneratorImpl)
 	ts := httptest.NewServer(shortenerRouter(handler.SaveShortURL, handler.FindByShortURL))
 	config.InitConfig()
 	defer ts.Close()
