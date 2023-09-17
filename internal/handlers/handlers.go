@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"github.com/lammer90/shortener/internal/config"
 	"github.com/lammer90/shortener/internal/util"
 	"io"
 	"net/http"
@@ -20,12 +19,14 @@ type urlGeneratorProvider interface {
 type ShortenerHandler struct {
 	shortenerStorageProvider
 	urlGeneratorProvider
+	baseURL string
 }
 
-func New(storage shortenerStorageProvider, generator urlGeneratorProvider) ShortenerHandler {
+func New(storage shortenerStorageProvider, generator urlGeneratorProvider, baseURL string) ShortenerHandler {
 	return ShortenerHandler{
 		storage,
 		generator,
+		baseURL,
 	}
 }
 
@@ -39,7 +40,7 @@ func (s ShortenerHandler) SaveShortURL(res http.ResponseWriter, req *http.Reques
 	s.Save(shortURL, string(body[:]))
 	res.Header().Set("content-type", "text/plain")
 	res.WriteHeader(http.StatusCreated)
-	res.Write([]byte(config.BaseURL + "/" + shortURL))
+	res.Write([]byte(s.baseURL + "/" + shortURL))
 }
 
 func (s ShortenerHandler) FindByShortURL(res http.ResponseWriter, req *http.Request) {

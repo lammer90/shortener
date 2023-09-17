@@ -34,7 +34,7 @@ func (m mockGenerator) GenerateURL(data string) string {
 var mockGeneratorImpl = mockGenerator{}
 
 func TestGetShortenerHandler(t *testing.T) {
-	ts := httptest.NewServer(shortenerRouter(handlers.New(testStorageImpl, mockGeneratorImpl)))
+	ts := httptest.NewServer(shortenerRouter(handlers.New(testStorageImpl, mockGeneratorImpl, "http://localhost:8080")))
 	config.InitConfig()
 	defer ts.Close()
 

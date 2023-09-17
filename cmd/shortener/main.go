@@ -11,7 +11,7 @@ import (
 
 func main() {
 	config.InitConfig()
-	http.ListenAndServe(config.ServAddress, shortenerRouter(handlers.New(inmemory.New(), base64generator.New())))
+	http.ListenAndServe(config.ServAddress, shortenerRouter(handlers.New(inmemory.New(), base64generator.New(), config.BaseURL)))
 }
 
 func shortenerRouter(handler handlers.ShortenerHandler) chi.Router {
