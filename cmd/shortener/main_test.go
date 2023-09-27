@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/lammer90/shortener/internal/config"
 	"github.com/lammer90/shortener/internal/handlers"
+	"github.com/lammer90/shortener/internal/logger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -34,8 +35,9 @@ func (m mockGenerator) GenerateURL(data string) string {
 var mockGeneratorImpl = mockGenerator{}
 
 func TestGetShortenerHandler(t *testing.T) {
-	ts := httptest.NewServer(shortenerRouter(handlers.New(testStorageImpl, mockGeneratorImpl, "http://localhost:8080")))
+	ts := httptest.NewServer(shortenerRouter(handlers.NewLoggingHandler(handlers.NewShortenerHandler(testStorageImpl, mockGeneratorImpl, "http://localhost:8080"))))
 	config.InitConfig()
+	logger.InitLogger("info")
 	defer ts.Close()
 
 	type request struct {

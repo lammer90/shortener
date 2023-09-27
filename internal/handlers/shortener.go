@@ -17,12 +17,12 @@ type urlGeneratorProvider interface {
 }
 
 type ShortenerHandler struct {
-	shortenerStorageProvider
-	urlGeneratorProvider
-	baseURL string
+	storage   shortenerStorageProvider
+	generator urlGeneratorProvider
+	baseURL   string
 }
 
-func New(storage shortenerStorageProvider, generator urlGeneratorProvider, baseURL string) ShortenerHandler {
+func NewShortenerHandler(storage shortenerStorageProvider, generator urlGeneratorProvider, baseURL string) Shortener {
 	return ShortenerHandler{
 		storage,
 		generator,
@@ -36,8 +36,8 @@ func (s ShortenerHandler) SaveShortURL(res http.ResponseWriter, req *http.Reques
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	shortURL := s.GenerateURL(string(body[:]))
-	s.Save(shortURL, string(body[:]))
+	shortURL := s.generator.GenerateURL(string(body[:]))
+	s.storage.Save(shortURL, string(body[:]))
 	res.Header().Set("content-type", "text/plain")
 	res.WriteHeader(http.StatusCreated)
 	res.Write([]byte(s.baseURL + "/" + shortURL))
@@ -45,7 +45,7 @@ func (s ShortenerHandler) SaveShortURL(res http.ResponseWriter, req *http.Reques
 
 func (s ShortenerHandler) FindByShortURL(res http.ResponseWriter, req *http.Request) {
 	arr := strings.Split(req.URL.String(), "/")
-	address, ok := s.Find(arr[len(arr)-1])
+	address, ok := s.storage.Find(arr[len(arr)-1])
 	if !ok || !util.ValidGetURL(req.URL.String()) {
 		res.WriteHeader(http.StatusBadRequest)
 		return
