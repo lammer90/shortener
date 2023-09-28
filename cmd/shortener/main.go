@@ -20,5 +20,6 @@ func shortenerRouter(handler handlers.Shortener) chi.Router {
 	r := chi.NewRouter()
 	r.Post("/", handler.SaveShortURL)
 	r.Get("/{short}", handler.FindByShortURL)
+	r.Post("/api/shorten", handler.SaveShortURLApi)
 	return r
 }

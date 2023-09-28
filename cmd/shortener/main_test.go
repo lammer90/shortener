@@ -170,3 +170,110 @@ func TestGetShortenerHandler(t *testing.T) {
 		})
 	}
 }
+
+func TestGetShortenerHandlerApi(t *testing.T) {
+	ts := httptest.NewServer(shortenerRouter(handlers.NewLoggingHandler(handlers.NewShortenerHandler(testStorageImpl, mockGeneratorImpl, "http://localhost:8080"))))
+	config.InitConfig()
+	logger.InitLogger("info")
+	defer ts.Close()
+
+	type request struct {
+		requestMethod string
+		requestURL    string
+		requestBody   string
+	}
+	type want struct {
+		code         int
+		response     string
+		headerName   string
+		headerValue  string
+		storageValue string
+	}
+	tests := []struct {
+		name    string
+		request request
+		want    want
+	}{
+		{
+			name: "negative test POST 1",
+			request: request{
+				requestMethod: "POST",
+				requestURL:    "/api/shorten",
+				requestBody:   "",
+			},
+			want: want{
+				code:         400,
+				response:     "",
+				headerName:   "",
+				headerValue:  "",
+				storageValue: "",
+			},
+		},
+		{
+			name: "negative test POST 2",
+			request: request{
+				requestMethod: "POST",
+				requestURL:    "/api/shorten",
+				requestBody:   "{\"test\": \"https://practicum.yandex.ru\"}",
+			},
+			want: want{
+				code:         400,
+				response:     "",
+				headerName:   "",
+				headerValue:  "",
+				storageValue: "",
+			},
+		},
+		{
+			name: "positive test POST",
+			request: request{
+				requestMethod: "POST",
+				requestURL:    "/api/shorten",
+				requestBody:   "{\"url\": \"https://practicum.yandex.ru/\"}",
+			},
+			want: want{
+				code:         201,
+				response:     "{\"result\":\"http://localhost:8080/EwHXdJfB\"}\n",
+				headerName:   "Content-Type",
+				headerValue:  "application/json",
+				storageValue: "https://practicum.yandex.ru/",
+			},
+		},
+		{
+			name: "positive test GET",
+			request: request{
+				requestMethod: "GET",
+				requestURL:    "/EwHXdJfB",
+				requestBody:   "",
+			},
+			want: want{
+				code:         200,
+				response:     "it_does_not_matter",
+				headerName:   "Location",
+				headerValue:  "https://practicum.yandex.ru/",
+				storageValue: "https://practicum.yandex.ru/",
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			req, err := http.NewRequest(test.request.requestMethod, ts.URL+test.request.requestURL, strings.NewReader(test.request.requestBody))
+			require.NoError(t, err)
+			req.Header.Set("Content-Type", "text/plain")
+
+			resp, err := ts.Client().Do(req)
+			require.NoError(t, err)
+
+			assert.Equal(t, resp.StatusCode, test.want.code)
+			defer resp.Body.Close()
+			resBody, err := io.ReadAll(resp.Body)
+
+			require.NoError(t, err)
+			assert.Equal(t, testStorageImpl["EwHXdJfB"], test.want.storageValue)
+			if test.want.response != "it_does_not_matter" {
+				assert.Equal(t, string(resBody), test.want.response)
+				assert.Equal(t, resp.Header.Get(test.want.headerName), test.want.headerValue)
+			}
+		})
+	}
+}

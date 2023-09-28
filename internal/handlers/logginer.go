@@ -25,6 +25,10 @@ func (l LoggingHandler) FindByShortURL(res http.ResponseWriter, req *http.Reques
 	l.log(res, req, l.shortener.FindByShortURL)
 }
 
+func (l LoggingHandler) SaveShortURLApi(res http.ResponseWriter, req *http.Request) {
+	l.log(res, req, l.shortener.SaveShortURLApi)
+}
+
 type (
 	responseData struct {
 		status int

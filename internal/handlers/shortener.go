@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"encoding/json"
+	"github.com/lammer90/shortener/internal/models"
 	"github.com/lammer90/shortener/internal/util"
 	"io"
 	"net/http"
@@ -52,4 +54,24 @@ func (s ShortenerHandler) FindByShortURL(res http.ResponseWriter, req *http.Requ
 	}
 	res.Header().Set("Location", address)
 	res.WriteHeader(http.StatusTemporaryRedirect)
+}
+
+func (s ShortenerHandler) SaveShortURLApi(res http.ResponseWriter, req *http.Request) {
+	var request models.Request
+	dec := json.NewDecoder(req.Body)
+	err := dec.Decode(&request)
+	if err != nil || request.URL == "" {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	shortURL := s.generator.GenerateURL(request.URL)
+	s.storage.Save(shortURL, request.URL)
+
+	res.Header().Set("Content-Type", "application/json")
+	res.WriteHeader(http.StatusCreated)
+	enc := json.NewEncoder(res)
+	if err := enc.Encode(models.NewResponse(s.baseURL + "/" + shortURL)); err != nil {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
 }
