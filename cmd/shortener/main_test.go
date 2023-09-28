@@ -29,7 +29,10 @@ var testStorageImpl testStorage = make(map[string]string)
 type mockGenerator struct{}
 
 func (m mockGenerator) GenerateURL(data string) string {
-	return "EwHXdJfB"
+	if data == "https://practicum.yandex.ru/" {
+		return "EwHXdJfB"
+	}
+	return "EwHXdJfJ"
 }
 
 var mockGeneratorImpl = mockGenerator{}
@@ -51,6 +54,7 @@ func TestGetShortenerHandler(t *testing.T) {
 		headerName   string
 		headerValue  string
 		storageValue string
+		storageKey   string
 	}
 	tests := []struct {
 		name    string
@@ -70,6 +74,7 @@ func TestGetShortenerHandler(t *testing.T) {
 				headerName:   "",
 				headerValue:  "",
 				storageValue: "",
+				storageKey:   "EwHXdJfB",
 			},
 		},
 		{
@@ -85,6 +90,7 @@ func TestGetShortenerHandler(t *testing.T) {
 				headerName:   "",
 				headerValue:  "",
 				storageValue: "",
+				storageKey:   "EwHXdJfB",
 			},
 		},
 		{
@@ -100,6 +106,7 @@ func TestGetShortenerHandler(t *testing.T) {
 				headerName:   "Content-Type",
 				headerValue:  "text/plain",
 				storageValue: "https://practicum.yandex.ru/",
+				storageKey:   "EwHXdJfB",
 			},
 		},
 		{
@@ -115,6 +122,7 @@ func TestGetShortenerHandler(t *testing.T) {
 				headerName:   "",
 				headerValue:  "",
 				storageValue: "https://practicum.yandex.ru/",
+				storageKey:   "EwHXdJfB",
 			},
 		},
 		{
@@ -130,6 +138,7 @@ func TestGetShortenerHandler(t *testing.T) {
 				headerName:   "",
 				headerValue:  "",
 				storageValue: "https://practicum.yandex.ru/",
+				storageKey:   "EwHXdJfB",
 			},
 		},
 		{
@@ -145,55 +154,9 @@ func TestGetShortenerHandler(t *testing.T) {
 				headerName:   "Location",
 				headerValue:  "https://practicum.yandex.ru/",
 				storageValue: "https://practicum.yandex.ru/",
+				storageKey:   "EwHXdJfB",
 			},
 		},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			req, err := http.NewRequest(test.request.requestMethod, ts.URL+test.request.requestURL, strings.NewReader(test.request.requestBody))
-			require.NoError(t, err)
-			req.Header.Set("Content-Type", "text/plain")
-
-			resp, err := ts.Client().Do(req)
-			require.NoError(t, err)
-
-			assert.Equal(t, resp.StatusCode, test.want.code)
-			defer resp.Body.Close()
-			resBody, err := io.ReadAll(resp.Body)
-
-			require.NoError(t, err)
-			assert.Equal(t, testStorageImpl["EwHXdJfB"], test.want.storageValue)
-			if test.want.response != "it_does_not_matter" {
-				assert.Equal(t, string(resBody), test.want.response)
-				assert.Equal(t, resp.Header.Get(test.want.headerName), test.want.headerValue)
-			}
-		})
-	}
-}
-
-func TestGetShortenerHandlerApi(t *testing.T) {
-	ts := httptest.NewServer(shortenerRouter(handlers.NewLoggingHandler(handlers.NewShortenerHandler(testStorageImpl, mockGeneratorImpl, "http://localhost:8080"))))
-	config.InitConfig()
-	logger.InitLogger("info")
-	defer ts.Close()
-
-	type request struct {
-		requestMethod string
-		requestURL    string
-		requestBody   string
-	}
-	type want struct {
-		code         int
-		response     string
-		headerName   string
-		headerValue  string
-		storageValue string
-	}
-	tests := []struct {
-		name    string
-		request request
-		want    want
-	}{
 		{
 			name: "negative api test POST 1",
 			request: request{
@@ -207,6 +170,7 @@ func TestGetShortenerHandlerApi(t *testing.T) {
 				headerName:   "",
 				headerValue:  "",
 				storageValue: "",
+				storageKey:   "EwHXdJfJ",
 			},
 		},
 		{
@@ -214,7 +178,7 @@ func TestGetShortenerHandlerApi(t *testing.T) {
 			request: request{
 				requestMethod: "POST",
 				requestURL:    "/api/shorten",
-				requestBody:   "{\"test\": \"https://practicum.yandex.ru\"}",
+				requestBody:   "{\"test\": \"https://practicum.yandex.com\"}",
 			},
 			want: want{
 				code:         400,
@@ -222,6 +186,7 @@ func TestGetShortenerHandlerApi(t *testing.T) {
 				headerName:   "",
 				headerValue:  "",
 				storageValue: "",
+				storageKey:   "EwHXdJfJ",
 			},
 		},
 		{
@@ -229,29 +194,31 @@ func TestGetShortenerHandlerApi(t *testing.T) {
 			request: request{
 				requestMethod: "POST",
 				requestURL:    "/api/shorten",
-				requestBody:   "{\"url\": \"https://practicum.yandex.ru/\"}",
+				requestBody:   "{\"url\": \"https://practicum.yandex.com/\"}",
 			},
 			want: want{
 				code:         201,
-				response:     "{\"result\":\"http://localhost:8080/EwHXdJfB\"}\n",
+				response:     "{\"result\":\"http://localhost:8080/EwHXdJfJ\"}\n",
 				headerName:   "Content-Type",
 				headerValue:  "application/json",
-				storageValue: "https://practicum.yandex.ru/",
+				storageValue: "https://practicum.yandex.com/",
+				storageKey:   "EwHXdJfJ",
 			},
 		},
 		{
 			name: "positive api test GET",
 			request: request{
 				requestMethod: "GET",
-				requestURL:    "/EwHXdJfB",
+				requestURL:    "/EwHXdJfJ",
 				requestBody:   "",
 			},
 			want: want{
 				code:         200,
 				response:     "it_does_not_matter",
 				headerName:   "Location",
-				headerValue:  "https://practicum.yandex.ru/",
-				storageValue: "https://practicum.yandex.ru/",
+				headerValue:  "https://practicum.yandex.com/",
+				storageValue: "https://practicum.yandex.com/",
+				storageKey:   "EwHXdJfJ",
 			},
 		},
 	}
@@ -269,7 +236,7 @@ func TestGetShortenerHandlerApi(t *testing.T) {
 			resBody, err := io.ReadAll(resp.Body)
 
 			require.NoError(t, err)
-			assert.Equal(t, testStorageImpl["EwHXdJfB"], test.want.storageValue)
+			assert.Equal(t, testStorageImpl[test.want.storageKey], test.want.storageValue)
 			if test.want.response != "it_does_not_matter" {
 				assert.Equal(t, string(resBody), test.want.response)
 				assert.Equal(t, resp.Header.Get(test.want.headerName), test.want.headerValue)
