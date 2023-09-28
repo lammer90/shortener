@@ -195,7 +195,7 @@ func TestGetShortenerHandlerApi(t *testing.T) {
 		want    want
 	}{
 		{
-			name: "negative test POST 1",
+			name: "negative api test POST 1",
 			request: request{
 				requestMethod: "POST",
 				requestURL:    "/api/shorten",
@@ -210,7 +210,7 @@ func TestGetShortenerHandlerApi(t *testing.T) {
 			},
 		},
 		{
-			name: "negative test POST 2",
+			name: "negative api test POST 2",
 			request: request{
 				requestMethod: "POST",
 				requestURL:    "/api/shorten",
@@ -225,7 +225,7 @@ func TestGetShortenerHandlerApi(t *testing.T) {
 			},
 		},
 		{
-			name: "positive test POST",
+			name: "positive api test POST",
 			request: request{
 				requestMethod: "POST",
 				requestURL:    "/api/shorten",
@@ -240,7 +240,7 @@ func TestGetShortenerHandlerApi(t *testing.T) {
 			},
 		},
 		{
-			name: "positive test GET",
+			name: "positive api test GET",
 			request: request{
 				requestMethod: "GET",
 				requestURL:    "/EwHXdJfB",
