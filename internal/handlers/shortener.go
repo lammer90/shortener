@@ -34,7 +34,7 @@ func NewShortenerHandler(storage shortenerStorageProvider, generator urlGenerato
 
 func (s ShortenerHandler) SaveShortURL(res http.ResponseWriter, req *http.Request) {
 	body, err := io.ReadAll(req.Body)
-	if err != nil || !util.CheckContentHeader(req) || !util.ValidPostURL(req.URL.String()) || len(body) == 0 {
+	if err != nil || !util.ValidPostURL(req.URL.String()) || len(body) == 0 {
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
