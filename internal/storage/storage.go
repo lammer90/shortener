@@ -1,6 +1,6 @@
 package storage
 
 type Repository interface {
-	Save(string, string)
-	Find(string) (string, bool)
+	Save(string, string) error
+	Find(string) (string, bool, error)
 }
