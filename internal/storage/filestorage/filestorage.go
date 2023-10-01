@@ -3,7 +3,6 @@ package filestorage
 import (
 	"bufio"
 	"encoding/json"
-	"github.com/lammer90/shortener/internal/config"
 	"github.com/lammer90/shortener/internal/storage"
 	"os"
 )
@@ -52,9 +51,9 @@ func (f fileStorage) Find(id string) (string, bool, error) {
 	return "", false, nil
 }
 
-func New() storage.Repository {
+func New(fileStoragePath string) storage.Repository {
 	return fileStorage{
-		filePath: config.FileStoragePath,
+		filePath: fileStoragePath,
 	}
 }
 

@@ -18,7 +18,7 @@ func main() {
 	http.ListenAndServe(config.ServAddress, shortenerRouter(
 		compressor.New(
 			logginer.New(
-				handlers.NewShortenerHandler(filestorage.New(), base64generator.New(), config.BaseURL)))))
+				handlers.NewShortenerHandler(filestorage.New(config.FileStoragePath), base64generator.New(), config.BaseURL)))))
 }
 
 func shortenerRouter(handler handlers.Shortener) chi.Router {
