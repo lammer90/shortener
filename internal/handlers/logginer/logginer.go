@@ -1,32 +1,33 @@
-package handlers
+package logginer
 
 import (
+	"github.com/lammer90/shortener/internal/handlers"
 	"github.com/lammer90/shortener/internal/logger"
 	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
 
-type LoggingHandler struct {
-	shortener Shortener
+type Logging struct {
+	shortener handlers.Shortener
 }
 
-func NewLoggingHandler(shortener Shortener) Shortener {
-	return LoggingHandler{
+func New(shortener handlers.Shortener) handlers.Shortener {
+	return Logging{
 		shortener,
 	}
 }
 
-func (l LoggingHandler) SaveShortURL(res http.ResponseWriter, req *http.Request) {
-	l.log(res, req, l.shortener.SaveShortURL)
+func (l Logging) SaveShortURL(res http.ResponseWriter, req *http.Request) {
+	log(res, req, l.shortener.SaveShortURL)
 }
 
-func (l LoggingHandler) FindByShortURL(res http.ResponseWriter, req *http.Request) {
-	l.log(res, req, l.shortener.FindByShortURL)
+func (l Logging) FindByShortURL(res http.ResponseWriter, req *http.Request) {
+	log(res, req, l.shortener.FindByShortURL)
 }
 
-func (l LoggingHandler) SaveShortURLApi(res http.ResponseWriter, req *http.Request) {
-	l.log(res, req, l.shortener.SaveShortURLApi)
+func (l Logging) SaveShortURLApi(res http.ResponseWriter, req *http.Request) {
+	log(res, req, l.shortener.SaveShortURLApi)
 }
 
 type (
@@ -52,7 +53,7 @@ func (r *loggingResponseWriter) WriteHeader(statusCode int) {
 	r.responseData.status = statusCode
 }
 
-func (l LoggingHandler) log(res http.ResponseWriter, req *http.Request, f func(http.ResponseWriter, *http.Request)) {
+func log(res http.ResponseWriter, req *http.Request, f func(http.ResponseWriter, *http.Request)) {
 	start := time.Now()
 
 	responseData := &responseData{
