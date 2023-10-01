@@ -68,9 +68,7 @@ func newCompressReader(r io.ReadCloser) (*compressReader, error) {
 func compress(res http.ResponseWriter, req *http.Request, f func(http.ResponseWriter, *http.Request)) {
 	ow := res
 	acceptEncoding := req.Header.Get("Accept-Encoding")
-	contentHeader := req.Header.Get("Content-Type")
-	if strings.Contains(acceptEncoding, "gzip") &&
-		(strings.Contains(contentHeader, "application/json") || strings.Contains(contentHeader, "text/plain")) {
+	if strings.Contains(acceptEncoding, "gzip") {
 		cw := newCompressWriter(res)
 		ow = cw
 		ow.Header().Set("Content-Encoding", "gzip")
