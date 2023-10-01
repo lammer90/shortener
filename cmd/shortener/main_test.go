@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/lammer90/shortener/internal/config"
 	"github.com/lammer90/shortener/internal/handlers"
+	"github.com/lammer90/shortener/internal/handlers/compressor"
+	"github.com/lammer90/shortener/internal/handlers/logginer"
 	"github.com/lammer90/shortener/internal/logger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,13 +17,14 @@ import (
 
 type testStorage map[string]string
 
-func (t testStorage) Save(id string, value string) {
+func (t testStorage) Save(id string, value string) error {
 	t[id] = value
+	return nil
 }
 
-func (t testStorage) Find(id string) (string, bool) {
+func (t testStorage) Find(id string) (string, bool, error) {
 	val, ok := t[id]
-	return val, ok
+	return val, ok, nil
 }
 
 var testStorageImpl testStorage = make(map[string]string)
@@ -38,7 +41,7 @@ func (m mockGenerator) GenerateURL(data string) string {
 var mockGeneratorImpl = mockGenerator{}
 
 func TestGetShortenerHandler(t *testing.T) {
-	ts := httptest.NewServer(shortenerRouter(handlers.NewLoggingHandler(handlers.NewShortenerHandler(testStorageImpl, mockGeneratorImpl, "http://localhost:8080"))))
+	ts := httptest.NewServer(shortenerRouter(compressor.New(logginer.New(handlers.NewShortenerHandler(testStorageImpl, mockGeneratorImpl, "http://localhost:8080")))))
 	config.InitConfig()
 	logger.InitLogger("info")
 	defer ts.Close()

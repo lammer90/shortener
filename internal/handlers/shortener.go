@@ -10,8 +10,8 @@ import (
 )
 
 type shortenerStorageProvider interface {
-	Save(string, string)
-	Find(string) (string, bool)
+	Save(string, string) error
+	Find(string) (string, bool, error)
 }
 
 type urlGeneratorProvider interface {
@@ -34,12 +34,16 @@ func NewShortenerHandler(storage shortenerStorageProvider, generator urlGenerato
 
 func (s ShortenerHandler) SaveShortURL(res http.ResponseWriter, req *http.Request) {
 	body, err := io.ReadAll(req.Body)
-	if err != nil || !util.CheckContentHeader(req) || !util.ValidPostURL(req.URL.String()) || len(body) == 0 {
+	if err != nil || !util.ValidPostURL(req.URL.String()) || len(body) == 0 {
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	shortURL := s.generator.GenerateURL(string(body[:]))
-	s.storage.Save(shortURL, string(body[:]))
+	err = s.storage.Save(shortURL, string(body[:]))
+	if err != nil {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	res.Header().Set("content-type", "text/plain")
 	res.WriteHeader(http.StatusCreated)
 	res.Write([]byte(s.baseURL + "/" + shortURL))
@@ -47,8 +51,8 @@ func (s ShortenerHandler) SaveShortURL(res http.ResponseWriter, req *http.Reques
 
 func (s ShortenerHandler) FindByShortURL(res http.ResponseWriter, req *http.Request) {
 	arr := strings.Split(req.URL.String(), "/")
-	address, ok := s.storage.Find(arr[len(arr)-1])
-	if !ok || !util.ValidGetURL(req.URL.String()) {
+	address, ok, err := s.storage.Find(arr[len(arr)-1])
+	if !ok || err != nil || !util.ValidGetURL(req.URL.String()) {
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
