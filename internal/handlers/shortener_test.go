@@ -12,13 +12,14 @@ import (
 
 type testStorage map[string]string
 
-func (t testStorage) Save(id string, value string) {
+func (t testStorage) Save(id string, value string) error {
 	t[id] = value
+	return nil
 }
 
-func (t testStorage) Find(id string) (string, bool) {
+func (t testStorage) Find(id string) (string, bool, error) {
 	val, ok := t[id]
-	return val, ok
+	return val, ok, nil
 }
 
 var testStorageImpl testStorage = make(map[string]string)

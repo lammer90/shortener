@@ -7,7 +7,7 @@ import (
 	"github.com/lammer90/shortener/internal/handlers/compressor"
 	"github.com/lammer90/shortener/internal/handlers/logginer"
 	"github.com/lammer90/shortener/internal/logger"
-	"github.com/lammer90/shortener/internal/storage/inmemory"
+	"github.com/lammer90/shortener/internal/storage/filestorage"
 	"github.com/lammer90/shortener/internal/urlgenerator/base64generator"
 	"net/http"
 )
@@ -18,7 +18,7 @@ func main() {
 	http.ListenAndServe(config.ServAddress, shortenerRouter(
 		compressor.New(
 			logginer.New(
-				handlers.NewShortenerHandler(inmemory.New(), base64generator.New(), config.BaseURL)))))
+				handlers.NewShortenerHandler(filestorage.New(), base64generator.New(), config.BaseURL)))))
 }
 
 func shortenerRouter(handler handlers.Shortener) chi.Router {
