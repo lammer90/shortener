@@ -3,6 +3,7 @@ package filestorage
 import (
 	"encoding/json"
 	"github.com/lammer90/shortener/internal/storage"
+	"io/fs"
 	"os"
 	"strings"
 )
@@ -18,7 +19,7 @@ func (f fileStorage) Save(id string, value string) error {
 		return err
 	}
 	data = append(data, '\n')
-	err = os.WriteFile(f.filePath, data, 0666)
+	err = os.WriteFile(f.filePath, data, fs.ModeAppend)
 	if err != nil {
 		return err
 	}
