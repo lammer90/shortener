@@ -9,10 +9,10 @@ import (
 )
 
 type Logging struct {
-	shortener handlers.Shortener
+	shortener handlers.ShortenerRestProvider
 }
 
-func New(shortener handlers.Shortener) handlers.Shortener {
+func New(shortener handlers.ShortenerRestProvider) handlers.ShortenerRestProvider {
 	return Logging{
 		shortener,
 	}

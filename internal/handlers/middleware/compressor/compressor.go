@@ -9,10 +9,10 @@ import (
 )
 
 type Compressor struct {
-	shortener handlers.Shortener
+	shortener handlers.ShortenerRestProvider
 }
 
-func New(shortener handlers.Shortener) handlers.Shortener {
+func New(shortener handlers.ShortenerRestProvider) handlers.ShortenerRestProvider {
 	return Compressor{
 		shortener,
 	}

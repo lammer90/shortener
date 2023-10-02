@@ -24,7 +24,7 @@ type ShortenerHandler struct {
 	baseURL   string
 }
 
-func NewShortenerHandler(storage shortenerStorageProvider, generator urlGeneratorProvider, baseURL string) Shortener {
+func New(storage shortenerStorageProvider, generator urlGeneratorProvider, baseURL string) ShortenerRestProvider {
 	return ShortenerHandler{
 		storage,
 		generator,

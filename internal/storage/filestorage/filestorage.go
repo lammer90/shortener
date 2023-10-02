@@ -8,34 +8,25 @@ import (
 )
 
 type fileStorage struct {
-	filePath string
+	file *os.File
 }
 
 func (f fileStorage) Save(id string, value string) error {
-	file, err := os.OpenFile(f.filePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		return err
-	}
 	fileModel := newFileModel(id, id, value)
 	data, err := json.Marshal(&fileModel)
 	if err != nil {
 		return err
 	}
 	data = append(data, '\n')
-	_, err = file.Write(data)
+	_, err = f.file.Write(data)
 	if err != nil {
 		return err
 	}
-	file.Close()
 	return nil
 }
 
 func (f fileStorage) Find(id string) (string, bool, error) {
-	file, err := os.OpenFile(f.filePath, os.O_RDONLY, 0666)
-	if err != nil {
-		return "", false, err
-	}
-	scanner := bufio.NewScanner(file)
+	scanner := bufio.NewScanner(f.file)
 	fileModel := fileModel{}
 
 	for scanner.Scan() {
@@ -51,9 +42,9 @@ func (f fileStorage) Find(id string) (string, bool, error) {
 	return "", false, nil
 }
 
-func New(fileStoragePath string) storage.Repository {
+func New(file *os.File) storage.Repository {
 	return fileStorage{
-		filePath: fileStoragePath,
+		file: file,
 	}
 }
 
