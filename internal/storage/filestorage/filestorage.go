@@ -1,14 +1,14 @@
 package filestorage
 
 import (
-	"bufio"
 	"encoding/json"
 	"github.com/lammer90/shortener/internal/storage"
 	"os"
+	"strings"
 )
 
 type fileStorage struct {
-	file *os.File
+	filePath string
 }
 
 func (f fileStorage) Save(id string, value string) error {
@@ -18,7 +18,7 @@ func (f fileStorage) Save(id string, value string) error {
 		return err
 	}
 	data = append(data, '\n')
-	_, err = f.file.Write(data)
+	err = os.WriteFile(f.filePath, data, 0666)
 	if err != nil {
 		return err
 	}
@@ -26,12 +26,15 @@ func (f fileStorage) Save(id string, value string) error {
 }
 
 func (f fileStorage) Find(id string) (string, bool, error) {
-	scanner := bufio.NewScanner(f.file)
+	data, err := os.ReadFile(f.filePath)
+	if err != nil {
+		return "", false, err
+	}
+	fileData := string(data)
 	fileModel := fileModel{}
 
-	for scanner.Scan() {
-		data := scanner.Bytes()
-		err := json.Unmarshal(data, &fileModel)
+	for _, line := range strings.Split(fileData, "\n") {
+		err := json.Unmarshal([]byte(line), &fileModel)
 		if err != nil {
 			return "", false, err
 		}
@@ -42,9 +45,9 @@ func (f fileStorage) Find(id string) (string, bool, error) {
 	return "", false, nil
 }
 
-func New(file *os.File) storage.Repository {
+func New(fileStoragePath string) storage.Repository {
 	return fileStorage{
-		file: file,
+		filePath: fileStoragePath,
 	}
 }
 
