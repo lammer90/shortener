@@ -3,13 +3,12 @@ package filestorage
 import (
 	"encoding/json"
 	"github.com/lammer90/shortener/internal/storage"
-	"io/fs"
 	"os"
 	"strings"
 )
 
 type fileStorage struct {
-	filePath string
+	file *os.File
 }
 
 func (f fileStorage) Save(id string, value string) error {
@@ -19,7 +18,7 @@ func (f fileStorage) Save(id string, value string) error {
 		return err
 	}
 	data = append(data, '\n')
-	err = os.WriteFile(f.filePath, data, fs.ModeAppend)
+	_, err = f.file.Write(data)
 	if err != nil {
 		return err
 	}
@@ -27,7 +26,7 @@ func (f fileStorage) Save(id string, value string) error {
 }
 
 func (f fileStorage) Find(id string) (string, bool, error) {
-	data, err := os.ReadFile(f.filePath)
+	data, err := os.ReadFile(f.file.Name())
 	if err != nil {
 		return "", false, err
 	}
@@ -46,9 +45,9 @@ func (f fileStorage) Find(id string) (string, bool, error) {
 	return "", false, nil
 }
 
-func New(fileStoragePath string) storage.Repository {
+func New(file *os.File) storage.Repository {
 	return fileStorage{
-		filePath: fileStoragePath,
+		file: file,
 	}
 }
 
