@@ -14,7 +14,9 @@ type fileStorage struct {
 
 func (f fileStorage) Save(id string, value string) error {
 	if savedValue, ok, err := f.storage.Find(id); err != nil || !ok || savedValue != value {
-		f.storage.Save(id, value)
+		if err := f.storage.Save(id, value); err != nil {
+			return err
+		}
 		return saveToFile(id, value, f.file)
 	}
 	return nil
