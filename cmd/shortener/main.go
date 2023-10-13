@@ -35,7 +35,7 @@ func shortenerRouter(handler handlers.ShortenerRestProvider, ping ping.Ping) chi
 	r.Post("/", handler.SaveShortURL)
 	r.Get("/{short}", handler.FindByShortURL)
 	r.Post("/api/shorten", handler.SaveShortURLApi)
-	r.Get("/ping", ping.Ping())
+	r.Get("/ping", ping.Ping)
 	return r
 }
 

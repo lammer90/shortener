@@ -5,6 +5,7 @@ import (
 	"github.com/lammer90/shortener/internal/handlers"
 	"github.com/lammer90/shortener/internal/handlers/middleware/compressor"
 	"github.com/lammer90/shortener/internal/handlers/middleware/logginer"
+	"github.com/lammer90/shortener/internal/handlers/ping"
 	"github.com/lammer90/shortener/internal/logger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -38,10 +39,14 @@ func (m mockGenerator) GenerateURL(data string) string {
 	return "EwHXdJfJ"
 }
 
-var mockGeneratorImpl = mockGenerator{}
+type pingMock struct{}
+
+func (p pingMock) Ping() error {
+	return nil
+}
 
 func TestGetShortenerHandler(t *testing.T) {
-	ts := httptest.NewServer(shortenerRouter(compressor.New(logginer.New(handlers.New(testStorageImpl, mockGeneratorImpl, "http://localhost:8080")))))
+	ts := httptest.NewServer(shortenerRouter(compressor.New(logginer.New(handlers.New(testStorageImpl, mockGenerator{}, "http://localhost:8080"))), ping.New(pingMock{})))
 	config.InitConfig()
 	logger.InitLogger("info")
 	defer ts.Close()

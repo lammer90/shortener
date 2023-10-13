@@ -1,24 +1,25 @@
 package ping
 
 import (
-	"database/sql"
 	"net/http"
 )
 
+type Provider interface {
+	Ping() error
+}
+
 type Ping struct {
-	db *sql.DB
+	provider Provider
 }
 
-func New(db *sql.DB) Ping {
-	return Ping{db: db}
+func New(provider Provider) Ping {
+	return Ping{provider: provider}
 }
 
-func (p Ping) Ping() func(res http.ResponseWriter, req *http.Request) {
-	return func(res http.ResponseWriter, req *http.Request) {
-		if err := p.db.Ping(); err != nil {
-			res.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		res.WriteHeader(http.StatusOK)
+func (p Ping) Ping(res http.ResponseWriter, req *http.Request) {
+	if err := p.provider.Ping(); err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		return
 	}
+	res.WriteHeader(http.StatusOK)
 }
