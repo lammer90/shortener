@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"github.com/lammer90/shortener/internal/logger"
 	"github.com/lammer90/shortener/internal/models"
 	"github.com/lammer90/shortener/internal/util"
 	"io"
@@ -51,6 +52,7 @@ func (s ShortenerHandler) SaveShortURL(res http.ResponseWriter, req *http.Reques
 }
 
 func (s ShortenerHandler) FindByShortURL(res http.ResponseWriter, req *http.Request) {
+	logger.Log.Info("< FindByShortURL")
 	arr := strings.Split(req.URL.String(), "/")
 	address, ok, err := s.storage.Find(arr[len(arr)-1])
 	if !ok || err != nil || !util.ValidGetURL(req.URL.String()) {
@@ -59,6 +61,7 @@ func (s ShortenerHandler) FindByShortURL(res http.ResponseWriter, req *http.Requ
 	}
 	res.Header().Set("Location", address)
 	res.WriteHeader(http.StatusTemporaryRedirect)
+	logger.Log.Info("> FindByShortURL")
 }
 
 func (s ShortenerHandler) SaveShortURLApi(res http.ResponseWriter, req *http.Request) {
