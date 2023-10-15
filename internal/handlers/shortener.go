@@ -95,7 +95,7 @@ func (s ShortenerHandler) SaveShortURLBatch(res http.ResponseWriter, req *http.R
 	for _, short := range shorts {
 		shortURL := s.generator.GenerateURL(short.OriginalURL)
 		toSave = append(toSave, models.NewBatchToSave(shortURL, short.OriginalURL))
-		response = append(response, models.NewBatchResponse(short.CorrelationId, shortURL))
+		response = append(response, models.NewBatchResponse(short.CorrelationID, shortURL))
 	}
 	s.storage.SaveBatch(toSave)
 	res.Header().Set("Content-Type", "application/json")

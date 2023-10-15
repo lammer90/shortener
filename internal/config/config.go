@@ -19,7 +19,7 @@ func initFlags() {
 	flag.StringVar(&ServAddress, "a", ":8080", "Request URL")
 	flag.StringVar(&BaseURL, "b", "http://localhost:8080", "Response URL")
 	flag.StringVar(&FileStoragePath, "f", "/tmp/short-url-db.json", "File storage path")
-	flag.StringVar(&DataSource, "d", "", "DataSource path")
+	flag.StringVar(&DataSource, "d", "postgresql://localhost:5432/plotnikov?user=postgres&password=1234", "DataSource path")
 	flag.Parse()
 }
 

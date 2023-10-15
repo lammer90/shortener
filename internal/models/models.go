@@ -9,12 +9,12 @@ type Response struct {
 }
 
 type BatchRequest struct {
-	CorrelationId string `json:"correlation_id"`
+	CorrelationID string `json:"correlation_id"`
 	OriginalURL   string `json:"original_url"`
 }
 
 type BatchResponse struct {
-	CorrelationId string `json:"correlation_id"`
+	CorrelationID string `json:"correlation_id"`
 	ShortURL      string `json:"short_url"`
 }
 
@@ -36,9 +36,9 @@ func NewBatchToSave(ShortURL, OriginalURL string) *BatchToSave {
 	}
 }
 
-func NewBatchResponse(correlationId, shortURL string) *BatchResponse {
+func NewBatchResponse(correlationID, shortURL string) *BatchResponse {
 	return &BatchResponse{
-		CorrelationId: correlationId,
+		CorrelationID: correlationID,
 		ShortURL:      shortURL,
 	}
 }
