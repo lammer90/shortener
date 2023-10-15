@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/lammer90/shortener/internal/config"
+	"github.com/lammer90/shortener/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -14,6 +15,13 @@ type testStorage map[string]string
 
 func (t testStorage) Save(id string, value string) error {
 	t[id] = value
+	return nil
+}
+
+func (t testStorage) SaveBatch(shorts []*models.BatchToSave) error {
+	for _, short := range shorts {
+		t[short.ShortURL] = short.OriginalURL
+	}
 	return nil
 }
 

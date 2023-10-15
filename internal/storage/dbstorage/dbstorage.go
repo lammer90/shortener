@@ -3,6 +3,7 @@ package dbstorage
 import (
 	"context"
 	"database/sql"
+	"github.com/lammer90/shortener/internal/models"
 )
 
 type dbStorage struct {
@@ -22,6 +23,35 @@ func (d dbStorage) Save(key, value string) error {
         ($1, $2);
     `, key, value)
 	return err
+}
+
+func (d dbStorage) SaveBatch(shorts []*models.BatchToSave) error {
+	tx, err := d.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	ctx := context.Background()
+	stmt, err := d.db.PrepareContext(ctx, `
+        INSERT INTO shorts
+        (short_url, original_url)
+        VALUES
+        ($1, $2)`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	for _, short := range shorts {
+		_, err := stmt.ExecContext(ctx, short.ShortURL, short.OriginalURL)
+		if err != nil {
+			return err
+		}
+	}
+
+	tx.Commit()
+	return nil
 }
 
 func (d dbStorage) Find(key string) (string, bool, error) {
