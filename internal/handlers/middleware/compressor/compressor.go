@@ -3,7 +3,6 @@ package compressor
 import (
 	"compress/gzip"
 	"github.com/lammer90/shortener/internal/handlers"
-	"github.com/lammer90/shortener/internal/logger"
 	"io"
 	"net/http"
 	"strings"
@@ -71,11 +70,9 @@ func newCompressReader(r io.ReadCloser) (*compressReader, error) {
 }
 
 func compress(res http.ResponseWriter, req *http.Request, f func(http.ResponseWriter, *http.Request)) {
-	logger.Log.Info("Start compress")
 	ow := res
 	acceptEncoding := req.Header.Get("Accept-Encoding")
 	if strings.Contains(acceptEncoding, "gzip") {
-		logger.Log.Info("Contains Accept-Encoding")
 		cw := newCompressWriter(res)
 		ow = cw
 		ow.Header().Set("Content-Encoding", "gzip")
@@ -84,7 +81,6 @@ func compress(res http.ResponseWriter, req *http.Request, f func(http.ResponseWr
 
 	contentEncoding := req.Header.Get("Content-Encoding")
 	if strings.Contains(contentEncoding, "gzip") {
-		logger.Log.Info("Contains Content-Encoding")
 		cr, err := newCompressReader(req.Body)
 		if err != nil {
 			res.WriteHeader(http.StatusInternalServerError)

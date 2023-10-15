@@ -58,7 +58,6 @@ func (r *loggingResponseWriter) WriteHeader(statusCode int) {
 }
 
 func log(res http.ResponseWriter, req *http.Request, f func(http.ResponseWriter, *http.Request)) {
-	logger.Log.Info("Start log")
 	start := time.Now()
 
 	responseData := &responseData{
