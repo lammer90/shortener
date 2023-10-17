@@ -47,7 +47,7 @@ func (s ShortenerHandler) SaveShortURL(res http.ResponseWriter, req *http.Reques
 		target := new(storage.ErrConflictDB)
 		if errors.As(err, &target) {
 			res.WriteHeader(http.StatusConflict)
-			res.Header().Set("content-type", "text/plain")
+			//res.Header().Set("content-type", "text/plain")
 			res.Write([]byte(s.baseURL + "/" + target.ShortURL))
 			return
 		}
@@ -84,7 +84,7 @@ func (s ShortenerHandler) SaveShortURLApi(res http.ResponseWriter, req *http.Req
 		target := new(storage.ErrConflictDB)
 		if errors.As(err, &target) {
 			res.WriteHeader(http.StatusConflict)
-			res.Header().Set("content-type", "text/plain")
+			//res.Header().Set("content-type", "text/plain")
 			res.Write([]byte(s.baseURL + "/" + target.ShortURL))
 			return
 		}
