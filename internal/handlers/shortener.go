@@ -81,6 +81,13 @@ func (s ShortenerHandler) SaveShortURLApi(res http.ResponseWriter, req *http.Req
 	shortURL := s.generator.GenerateURL(request.URL)
 	err = s.storage.Save(shortURL, request.URL)
 	if err != nil {
+		target := new(storage.ErrConflictDB)
+		if errors.As(err, &target) {
+			res.WriteHeader(http.StatusConflict)
+			res.Header().Set("content-type", "text/plain")
+			res.Write([]byte(s.baseURL + "/" + target.ShortURL))
+			return
+		}
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
