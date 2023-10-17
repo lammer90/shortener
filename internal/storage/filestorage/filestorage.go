@@ -2,6 +2,7 @@ package filestorage
 
 import (
 	"encoding/json"
+	"github.com/lammer90/shortener/internal/models"
 	"github.com/lammer90/shortener/internal/storage"
 	"os"
 	"strings"
@@ -18,6 +19,18 @@ func (f fileStorage) Save(id string, value string) error {
 			return err
 		}
 		return saveToFile(id, value, f.file)
+	}
+	return nil
+}
+
+func (f fileStorage) SaveBatch(shorts []*models.BatchToSave) error {
+	for _, short := range shorts {
+		if savedValue, ok, err := f.storage.Find(short.ShortURL); err != nil || !ok || savedValue != short.OriginalURL {
+			if err := f.storage.Save(short.ShortURL, short.OriginalURL); err != nil {
+				return err
+			}
+			return saveToFile(short.ShortURL, short.OriginalURL, f.file)
+		}
 	}
 	return nil
 }
