@@ -30,6 +30,10 @@ func (l Logging) SaveShortURLApi(res http.ResponseWriter, req *http.Request) {
 	log(res, req, l.shortener.SaveShortURLApi)
 }
 
+func (l Logging) SaveShortURLBatch(res http.ResponseWriter, req *http.Request) {
+	log(res, req, l.shortener.SaveShortURLBatch)
+}
+
 type (
 	responseData struct {
 		status int
