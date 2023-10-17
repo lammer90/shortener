@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/lammer90/shortener/internal/models"
+	"github.com/lammer90/shortener/internal/storage"
 	"github.com/lammer90/shortener/internal/util"
 	"io"
 	"net/http"
@@ -42,6 +44,13 @@ func (s ShortenerHandler) SaveShortURL(res http.ResponseWriter, req *http.Reques
 	shortURL := s.generator.GenerateURL(string(body[:]))
 	err = s.storage.Save(shortURL, string(body[:]))
 	if err != nil {
+		target := new(storage.ErrConflictDB)
+		if errors.As(err, &target) {
+			res.WriteHeader(http.StatusConflict)
+			res.Header().Set("content-type", "text/plain")
+			res.Write([]byte(s.baseURL + "/" + target.ShortURL))
+			return
+		}
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -70,7 +79,22 @@ func (s ShortenerHandler) SaveShortURLApi(res http.ResponseWriter, req *http.Req
 		return
 	}
 	shortURL := s.generator.GenerateURL(request.URL)
-	s.storage.Save(shortURL, request.URL)
+	err = s.storage.Save(shortURL, request.URL)
+	if err != nil {
+		target := new(storage.ErrConflictDB)
+		if errors.As(err, &target) {
+			res.Header().Set("Content-Type", "application/json")
+			res.WriteHeader(http.StatusConflict)
+			enc := json.NewEncoder(res)
+			if err := enc.Encode(models.NewResponse(s.baseURL + "/" + shortURL)); err != nil {
+				res.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			return
+		}
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusCreated)

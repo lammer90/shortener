@@ -3,7 +3,11 @@ package dbstorage
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/lammer90/shortener/internal/models"
+	"github.com/lammer90/shortener/internal/storage"
 )
 
 type dbStorage struct {
@@ -22,6 +26,13 @@ func (d dbStorage) Save(key, value string) error {
         VALUES
         ($1, $2);
     `, key, value)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
+			shortURL := findByOriginal(d.db, value)
+			return storage.NewErrConflict(shortURL, err)
+		}
+	}
 	return err
 }
 
@@ -72,10 +83,31 @@ func (d dbStorage) Find(key string) (string, bool, error) {
 }
 
 func initDB(db *sql.DB) {
-	db.ExecContext(context.Background(), `
+	ctx := context.Background()
+	db.ExecContext(ctx, `
         CREATE TABLE IF NOT EXISTS shorts (
-            short_url varchar PRIMARY KEY,
+            short_url varchar,
             original_url varchar
         )
     `)
+	db.ExecContext(ctx, `
+        CREATE UNIQUE INDEX IF NOT EXISTS shorts_original_url_idx ON shorts (original_url)
+    `)
+}
+
+func findByOriginal(db *sql.DB, value string) string {
+	row := db.QueryRowContext(context.Background(), `
+        SELECT
+            s.short_url
+        FROM shorts s
+        WHERE
+            s.original_url = $1
+    `, value)
+
+	var shortURL string
+	err := row.Scan(&shortURL)
+	if err != nil {
+		return ""
+	}
+	return shortURL
 }
