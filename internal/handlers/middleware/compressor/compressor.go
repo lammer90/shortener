@@ -30,6 +30,10 @@ func (c Compressor) SaveShortURLApi(res http.ResponseWriter, req *http.Request) 
 	compress(res, req, c.shortener.SaveShortURLApi)
 }
 
+func (c Compressor) SaveShortURLBatch(res http.ResponseWriter, req *http.Request) {
+	compress(res, req, c.shortener.SaveShortURLBatch)
+}
+
 type compressWriter struct {
 	http.ResponseWriter
 	zw *gzip.Writer
