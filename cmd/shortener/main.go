@@ -16,7 +16,9 @@ import (
 	"github.com/lammer90/shortener/internal/storage/filestorage"
 	"github.com/lammer90/shortener/internal/storage/inmemory"
 	"github.com/lammer90/shortener/internal/urlgenerator/base64generator"
+	"github.com/lammer90/shortener/internal/userstorage"
 	"github.com/lammer90/shortener/internal/userstorage/dbuserstorage"
+	"github.com/lammer90/shortener/internal/userstorage/inmemoryuser"
 	"io"
 	"net/http"
 	"os"
@@ -25,9 +27,8 @@ import (
 func main() {
 	config.InitConfig()
 	logger.InitLogger("info")
-	st, cl, db := getActualStorage()
+	st, userSt, cl, db := getActualStorage()
 	defer cl.Close()
-	userSt := dbuserstorage.New(db)
 	http.ListenAndServe(config.ServAddress, shortenerRouter(
 		auth.New(userSt, config.PrivateKey,
 			compressor.New(
@@ -47,13 +48,13 @@ func shortenerRouter(handler handlers.ShortenerRestProvider, ping ping.Ping) chi
 	return r
 }
 
-func getActualStorage() (storage.Repository, io.Closer, *sql.DB) {
+func getActualStorage() (storage.Repository, userstorage.Repository, io.Closer, *sql.DB) {
 	if config.DataSource != "" {
 		db := InitDB("pgx", config.DataSource)
-		return dbstorage.New(db), db, db
+		return dbstorage.New(db), dbuserstorage.New(db), db, db
 	} else {
 		file := openFile(config.FileStoragePath)
-		return filestorage.New(inmemory.New(), file), file, nil
+		return filestorage.New(inmemory.New(), file), inmemoryuser.New(), file, nil
 	}
 }
 
