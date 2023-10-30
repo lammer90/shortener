@@ -9,29 +9,33 @@ import (
 )
 
 type Compressor struct {
-	shortener handlers.ShortenerRestProvider
+	shortener handlers.ShortenerRestProviderWithContext
 }
 
-func New(shortener handlers.ShortenerRestProvider) handlers.ShortenerRestProvider {
+func New(shortener handlers.ShortenerRestProviderWithContext) handlers.ShortenerRestProviderWithContext {
 	return Compressor{
 		shortener,
 	}
 }
 
-func (c Compressor) SaveShortURL(res http.ResponseWriter, req *http.Request) {
-	compress(res, req, c.shortener.SaveShortURL)
+func (c Compressor) SaveShortURL(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
+	compress(res, req, ctx, c.shortener.SaveShortURL)
 }
 
-func (c Compressor) FindByShortURL(res http.ResponseWriter, req *http.Request) {
-	compress(res, req, c.shortener.FindByShortURL)
+func (c Compressor) FindByShortURL(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
+	compress(res, req, ctx, c.shortener.FindByShortURL)
 }
 
-func (c Compressor) SaveShortURLApi(res http.ResponseWriter, req *http.Request) {
-	compress(res, req, c.shortener.SaveShortURLApi)
+func (c Compressor) SaveShortURLApi(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
+	compress(res, req, ctx, c.shortener.SaveShortURLApi)
 }
 
-func (c Compressor) SaveShortURLBatch(res http.ResponseWriter, req *http.Request) {
-	compress(res, req, c.shortener.SaveShortURLBatch)
+func (c Compressor) SaveShortURLBatch(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
+	compress(res, req, ctx, c.shortener.SaveShortURLBatch)
+}
+
+func (c Compressor) FindURLByUser(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
+	compress(res, req, ctx, c.shortener.FindURLByUser)
 }
 
 type compressWriter struct {
@@ -69,7 +73,7 @@ func newCompressReader(r io.ReadCloser) (*compressReader, error) {
 	}, nil
 }
 
-func compress(res http.ResponseWriter, req *http.Request, f func(http.ResponseWriter, *http.Request)) {
+func compress(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext, f func(http.ResponseWriter, *http.Request, *handlers.RequestContext)) {
 	ow := res
 	acceptEncoding := req.Header.Get("Accept-Encoding")
 	if strings.Contains(acceptEncoding, "gzip") {
@@ -89,5 +93,5 @@ func compress(res http.ResponseWriter, req *http.Request, f func(http.ResponseWr
 		req.Body = cr
 		defer cr.Close()
 	}
-	f(ow, req)
+	f(ow, req, ctx)
 }

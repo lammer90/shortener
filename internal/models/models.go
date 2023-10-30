@@ -21,6 +21,12 @@ type BatchResponse struct {
 type BatchToSave struct {
 	ShortURL    string
 	OriginalURL string
+	UserId      string
+}
+
+type UserResult struct {
+	ShortURL    string `json:"short_url"`
+	OriginalURL string `json:"original_url"`
 }
 
 func NewResponse(response string) *Response {
@@ -29,10 +35,11 @@ func NewResponse(response string) *Response {
 	}
 }
 
-func NewBatchToSave(ShortURL, OriginalURL string) *BatchToSave {
+func NewBatchToSave(shortURL, originalURL, userId string) *BatchToSave {
 	return &BatchToSave{
-		ShortURL:    ShortURL,
-		OriginalURL: OriginalURL,
+		ShortURL:    shortURL,
+		OriginalURL: originalURL,
+		UserId:      userId,
 	}
 }
 
@@ -40,5 +47,12 @@ func NewBatchResponse(correlationID, shortURL string) *BatchResponse {
 	return &BatchResponse{
 		CorrelationID: correlationID,
 		ShortURL:      shortURL,
+	}
+}
+
+func NewUserResult(shortURL, originalURL string) *UserResult {
+	return &UserResult{
+		ShortURL:    shortURL,
+		OriginalURL: originalURL,
 	}
 }

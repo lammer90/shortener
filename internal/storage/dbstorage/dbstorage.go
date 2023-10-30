@@ -19,13 +19,13 @@ func New(db *sql.DB) dbStorage {
 	return dbStorage{db: db}
 }
 
-func (d dbStorage) Save(key, value string) error {
+func (d dbStorage) Save(key, value, userId string) error {
 	_, err := d.db.ExecContext(context.Background(), `
         INSERT INTO shorts
-        (short_url, original_url)
+        (short_url, original_url, user_id)
         VALUES
-        ($1, $2);
-    `, key, value)
+        ($1, $2, $3);
+    `, key, value, userId)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
@@ -46,16 +46,16 @@ func (d dbStorage) SaveBatch(shorts []*models.BatchToSave) error {
 	ctx := context.Background()
 	stmt, err := d.db.PrepareContext(ctx, `
         INSERT INTO shorts
-        (short_url, original_url)
+        (short_url, original_url, user_id)
         VALUES
-        ($1, $2)`)
+        ($1, $2, $3)`)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
 	for _, short := range shorts {
-		_, err := stmt.ExecContext(ctx, short.ShortURL, short.OriginalURL)
+		_, err := stmt.ExecContext(ctx, short.ShortURL, short.OriginalURL, short.UserId)
 		if err != nil {
 			return err
 		}
@@ -82,12 +82,44 @@ func (d dbStorage) Find(key string) (string, bool, error) {
 	return value, true, nil
 }
 
+func (d dbStorage) FindByUserId(userId string) (map[string]string, error) {
+	resultMap := make(map[string]string)
+	rows, err := d.db.QueryContext(context.Background(), `
+        SELECT
+            s.short_url,
+            s.original_url
+        FROM shorts s
+        WHERE
+            s.user_id = $1
+    `, userId)
+
+	type result struct {
+		ShortUrl    string
+		OriginalUrl string
+	}
+
+	for rows.Next() {
+		var r result
+		err = rows.Scan(&r.ShortUrl, &r.OriginalUrl)
+		if err != nil {
+			return nil, err
+		}
+		resultMap[r.ShortUrl] = r.OriginalUrl
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	return resultMap, nil
+}
+
 func initDB(db *sql.DB) {
 	ctx := context.Background()
 	db.ExecContext(ctx, `
         CREATE TABLE IF NOT EXISTS shorts (
             short_url varchar,
-            original_url varchar
+            original_url varchar,
+            user_id varchar
         )
     `)
 	db.ExecContext(ctx, `

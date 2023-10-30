@@ -6,6 +6,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/lammer90/shortener/internal/config"
 	"github.com/lammer90/shortener/internal/handlers"
+	"github.com/lammer90/shortener/internal/handlers/middleware/auth"
 	"github.com/lammer90/shortener/internal/handlers/middleware/compressor"
 	"github.com/lammer90/shortener/internal/handlers/middleware/logginer"
 	"github.com/lammer90/shortener/internal/handlers/ping"
@@ -15,6 +16,7 @@ import (
 	"github.com/lammer90/shortener/internal/storage/filestorage"
 	"github.com/lammer90/shortener/internal/storage/inmemory"
 	"github.com/lammer90/shortener/internal/urlgenerator/base64generator"
+	"github.com/lammer90/shortener/internal/userstorage/dbuserstorage"
 	"io"
 	"net/http"
 	"os"
@@ -25,10 +27,12 @@ func main() {
 	logger.InitLogger("info")
 	st, cl, db := getActualStorage()
 	defer cl.Close()
+	userSt := dbuserstorage.New(db)
 	http.ListenAndServe(config.ServAddress, shortenerRouter(
-		compressor.New(
-			logginer.New(
-				handlers.New(st, base64generator.New(), config.BaseURL))),
+		auth.New(userSt, config.PrivateKey,
+			compressor.New(
+				logginer.New(
+					handlers.New(st, base64generator.New(), config.BaseURL)))),
 		ping.New(db)))
 }
 
@@ -39,6 +43,7 @@ func shortenerRouter(handler handlers.ShortenerRestProvider, ping ping.Ping) chi
 	r.Post("/api/shorten", handler.SaveShortURLApi)
 	r.Post("/api/shorten/batch", handler.SaveShortURLBatch)
 	r.Get("/ping", ping.Ping)
+	r.Get("/api/user/urls", handler.FindURLByUser)
 	return r
 }
 

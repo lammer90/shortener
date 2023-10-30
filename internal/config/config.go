@@ -9,6 +9,7 @@ var ServAddress string
 var BaseURL string
 var FileStoragePath string
 var DataSource string
+var PrivateKey string
 
 func InitConfig() {
 	initFlags()
@@ -20,6 +21,7 @@ func initFlags() {
 	flag.StringVar(&BaseURL, "b", "http://localhost:8080", "Response URL")
 	flag.StringVar(&FileStoragePath, "f", "/tmp/short-url-db.json", "File storage path")
 	flag.StringVar(&DataSource, "d", "", "DataSource path")
+	flag.StringVar(&PrivateKey, "p", "privateKey", "PrivateKey for jwt auth")
 	flag.Parse()
 }
 
@@ -38,5 +40,9 @@ func initEnv() {
 
 	if envDataSource := os.Getenv("DATABASE_DSN"); envDataSource != "" {
 		DataSource = envDataSource
+	}
+
+	if privateKey := os.Getenv("PRIVATE_KEY"); privateKey != "" {
+		PrivateKey = privateKey
 	}
 }

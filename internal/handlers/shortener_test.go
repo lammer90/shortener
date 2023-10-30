@@ -11,26 +11,44 @@ import (
 	"testing"
 )
 
-type testStorage map[string]string
+type userAndValue struct {
+	UserId string
+	Value  string
+}
 
-func (t testStorage) Save(id string, value string) error {
-	t[id] = value
+type testStorage map[string]*userAndValue
+
+func (m testStorage) Save(id string, value string, userId string) error {
+	m[id] = &userAndValue{userId, value}
 	return nil
 }
 
-func (t testStorage) SaveBatch(shorts []*models.BatchToSave) error {
+func (m testStorage) SaveBatch(shorts []*models.BatchToSave) error {
 	for _, short := range shorts {
-		t[short.ShortURL] = short.OriginalURL
+		m[short.ShortURL] = &userAndValue{short.UserId, short.OriginalURL}
 	}
 	return nil
 }
 
-func (t testStorage) Find(id string) (string, bool, error) {
-	val, ok := t[id]
-	return val, ok, nil
+func (m testStorage) Find(id string) (string, bool, error) {
+	if val, ok := m[id]; ok {
+		return val.Value, ok, nil
+	} else {
+		return "", ok, nil
+	}
 }
 
-var testStorageImpl testStorage = make(map[string]string)
+func (m testStorage) FindByUserId(userId string) (map[string]string, error) {
+	result := make(map[string]string, 0)
+	for key, val := range m {
+		if val.UserId == userId {
+			result[key] = val.Value
+		}
+	}
+	return result, nil
+}
+
+var testStorageImpl testStorage = make(map[string]*userAndValue)
 
 type mockGenerator struct{}
 
@@ -158,9 +176,9 @@ func TestGetShortenerHandler(t *testing.T) {
 			w := httptest.NewRecorder()
 			handler := New(testStorageImpl, mockGeneratorImpl, "http://localhost:8080")
 			if test.request.requestMethod == "GET" {
-				handler.FindByShortURL(w, request)
+				handler.FindByShortURL(w, request, &RequestContext{""})
 			} else if test.request.requestMethod == "POST" {
-				handler.SaveShortURL(w, request)
+				handler.SaveShortURL(w, request, &RequestContext{""})
 			}
 
 			res := w.Result()
@@ -169,7 +187,11 @@ func TestGetShortenerHandler(t *testing.T) {
 			resBody, err := io.ReadAll(res.Body)
 
 			require.NoError(t, err)
-			assert.Equal(t, testStorageImpl["EwHXdJfB"], test.want.storageValue)
+			if testStorageImpl["EwHXdJfB"] == nil {
+				assert.Equal(t, "", test.want.storageValue)
+			} else {
+				assert.Equal(t, testStorageImpl["EwHXdJfB"].Value, test.want.storageValue)
+			}
 			assert.Equal(t, string(resBody), test.want.response)
 			assert.Equal(t, res.Header.Get(test.want.headerName), test.want.headerValue)
 		})
