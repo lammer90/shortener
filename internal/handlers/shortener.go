@@ -126,7 +126,7 @@ func (s ShortenerHandler) SaveShortURLBatch(res http.ResponseWriter, req *http.R
 }
 
 func (s ShortenerHandler) FindURLByUser(res http.ResponseWriter, req *http.Request, ctx *RequestContext) {
-	results, err := s.storage.FindByUserId(ctx.UserId)
+	results, err := s.storage.FindByUserID(ctx.UserId)
 	if err != nil {
 		res.WriteHeader(http.StatusBadRequest)
 		return
@@ -138,7 +138,7 @@ func (s ShortenerHandler) FindURLByUser(res http.ResponseWriter, req *http.Reque
 
 	response := make([]*models.UserResult, 0)
 	for key, val := range results {
-		response = append(response, models.NewUserResult(key, val))
+		response = append(response, models.NewUserResult(s.baseURL+"/"+key, val))
 	}
 
 	res.Header().Set("Content-Type", "application/json")

@@ -55,7 +55,7 @@ func (d dbStorage) SaveBatch(shorts []*models.BatchToSave) error {
 	defer stmt.Close()
 
 	for _, short := range shorts {
-		_, err := stmt.ExecContext(ctx, short.ShortURL, short.OriginalURL, short.UserId)
+		_, err := stmt.ExecContext(ctx, short.ShortURL, short.OriginalURL, short.UserID)
 		if err != nil {
 			return err
 		}
@@ -82,7 +82,7 @@ func (d dbStorage) Find(key string) (string, bool, error) {
 	return value, true, nil
 }
 
-func (d dbStorage) FindByUserId(userId string) (map[string]string, error) {
+func (d dbStorage) FindByUserID(userID string) (map[string]string, error) {
 	resultMap := make(map[string]string)
 	rows, err := d.db.QueryContext(context.Background(), `
         SELECT
@@ -91,7 +91,7 @@ func (d dbStorage) FindByUserId(userId string) (map[string]string, error) {
         FROM shorts s
         WHERE
             s.user_id = $1
-    `, userId)
+    `, userID)
 
 	type result struct {
 		ShortUrl    string

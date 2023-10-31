@@ -32,7 +32,7 @@ func (m testStorage) Save(id string, value string, userId string) error {
 
 func (m testStorage) SaveBatch(shorts []*models.BatchToSave) error {
 	for _, short := range shorts {
-		m[short.ShortURL] = &userAndValue{short.UserId, short.OriginalURL}
+		m[short.ShortURL] = &userAndValue{short.UserID, short.OriginalURL}
 	}
 	return nil
 }
@@ -45,10 +45,10 @@ func (m testStorage) Find(id string) (string, bool, error) {
 	}
 }
 
-func (m testStorage) FindByUserId(userId string) (map[string]string, error) {
+func (m testStorage) FindByUserID(userID string) (map[string]string, error) {
 	result := make(map[string]string, 0)
 	for key, val := range m {
-		if val.UserId == userId {
+		if val.UserId == userID {
 			result[key] = val.Value
 		}
 	}

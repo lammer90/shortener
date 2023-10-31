@@ -21,7 +21,7 @@ type BatchResponse struct {
 type BatchToSave struct {
 	ShortURL    string
 	OriginalURL string
-	UserId      string
+	UserID      string
 }
 
 type UserResult struct {
@@ -35,11 +35,11 @@ func NewResponse(response string) *Response {
 	}
 }
 
-func NewBatchToSave(shortURL, originalURL, userId string) *BatchToSave {
+func NewBatchToSave(shortURL, originalURL, userID string) *BatchToSave {
 	return &BatchToSave{
 		ShortURL:    shortURL,
 		OriginalURL: originalURL,
-		UserId:      userId,
+		UserID:      userID,
 	}
 }
 
