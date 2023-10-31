@@ -46,7 +46,7 @@ func (c Authenticator) SaveShortURLBatch(res http.ResponseWriter, req *http.Requ
 func (c Authenticator) FindURLByUser(res http.ResponseWriter, req *http.Request) {
 	userID := c.findAuth(req)
 	if userID == "" {
-		res.WriteHeader(http.StatusUnauthorized)
+		res.WriteHeader(http.StatusNoContent)
 		return
 	}
 	c.shortener.FindURLByUser(res, req, &handlers.RequestContext{
