@@ -44,13 +44,13 @@ func (c Authenticator) SaveShortURLBatch(res http.ResponseWriter, req *http.Requ
 }
 
 func (c Authenticator) FindURLByUser(res http.ResponseWriter, req *http.Request) {
-	userId := c.findAuth(req)
-	if userId == "" {
+	userID := c.findAuth(req)
+	if userID == "" {
 		res.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	c.shortener.FindURLByUser(res, req, &handlers.RequestContext{
-		UserID: userId,
+		UserID: userID,
 	})
 }
 
@@ -79,13 +79,13 @@ func (c Authenticator) checkAuth(res http.ResponseWriter, req *http.Request) *ha
 }
 
 func (c Authenticator) findAuth(req *http.Request) string {
-	userId := ""
+	userID := ""
 	for _, cookie := range req.Cookies() {
 		if cookie.Name == "Authorization" {
-			userId = getUserId(cookie.Value, c.privateKey)
+			userID = getUserID(cookie.Value, c.privateKey)
 		}
 	}
-	return userId
+	return userID
 }
 
 type Claims struct {
@@ -93,13 +93,14 @@ type Claims struct {
 	UserID string
 }
 
-func getUserId(tokenString string, privateKey string) string {
+func getUserID(tokenString string, privateKey string) string {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims,
 		func(t *jwt.Token) (interface{}, error) {
 			return []byte(privateKey), nil
 		})
 	if err != nil {
+		logger.Log.Error(err.Error())
 		return ""
 	}
 
