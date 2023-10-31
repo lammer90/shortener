@@ -54,11 +54,6 @@ func (c Authenticator) FindURLByUser(res http.ResponseWriter, req *http.Request)
 	})
 }
 
-type RequestWithId struct {
-	*http.Request
-	UserId int
-}
-
 func (c Authenticator) checkAuth(res http.ResponseWriter, req *http.Request) *handlers.RequestContext {
 	userID := c.findAuth(req)
 	if userID == "" {
@@ -82,6 +77,7 @@ func (c Authenticator) findAuth(req *http.Request) string {
 	userID := ""
 	for _, cookie := range req.Cookies() {
 		if cookie.Name == "Authorization" {
+			logger.Log.Info("Found Authorization token")
 			userID = getUserID(cookie.Value, c.privateKey)
 		}
 	}
@@ -100,7 +96,7 @@ func getUserID(tokenString string, privateKey string) string {
 			return []byte(privateKey), nil
 		})
 	if err != nil {
-		logger.Log.Error(err.Error())
+		logger.Log.Info(err.Error())
 		return ""
 	}
 

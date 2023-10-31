@@ -6,7 +6,7 @@ import (
 )
 
 type userAndValue struct {
-	UserId string
+	UserID string
 	Value  string
 }
 
@@ -35,7 +35,7 @@ func (m mockStorage) Find(id string) (string, bool, error) {
 func (m mockStorage) FindByUserID(userID string) (map[string]string, error) {
 	result := make(map[string]string, 0)
 	for key, val := range m {
-		if val.UserId == userID {
+		if val.UserID == userID {
 			result[key] = val.Value
 		}
 	}
