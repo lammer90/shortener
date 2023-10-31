@@ -36,7 +36,7 @@ func (s ShortenerHandler) SaveShortURL(res http.ResponseWriter, req *http.Reques
 		return
 	}
 	shortURL := s.generator.GenerateURL(string(body[:]))
-	err = s.storage.Save(shortURL, string(body[:]), ctx.UserId)
+	err = s.storage.Save(shortURL, string(body[:]), ctx.UserID)
 	if err != nil {
 		target := new(storage.ErrConflictDB)
 		if errors.As(err, &target) {
@@ -73,7 +73,7 @@ func (s ShortenerHandler) SaveShortURLApi(res http.ResponseWriter, req *http.Req
 		return
 	}
 	shortURL := s.generator.GenerateURL(request.URL)
-	err = s.storage.Save(shortURL, request.URL, ctx.UserId)
+	err = s.storage.Save(shortURL, request.URL, ctx.UserID)
 	if err != nil {
 		target := new(storage.ErrConflictDB)
 		if errors.As(err, &target) {
@@ -112,7 +112,7 @@ func (s ShortenerHandler) SaveShortURLBatch(res http.ResponseWriter, req *http.R
 
 	for _, short := range shorts {
 		shortURL := s.generator.GenerateURL(short.OriginalURL)
-		toSave = append(toSave, models.NewBatchToSave(shortURL, short.OriginalURL, ctx.UserId))
+		toSave = append(toSave, models.NewBatchToSave(shortURL, short.OriginalURL, ctx.UserID))
 		response = append(response, models.NewBatchResponse(short.CorrelationID, s.baseURL+"/"+shortURL))
 	}
 	s.storage.SaveBatch(toSave)
@@ -126,7 +126,7 @@ func (s ShortenerHandler) SaveShortURLBatch(res http.ResponseWriter, req *http.R
 }
 
 func (s ShortenerHandler) FindURLByUser(res http.ResponseWriter, req *http.Request, ctx *RequestContext) {
-	results, err := s.storage.FindByUserID(ctx.UserId)
+	results, err := s.storage.FindByUserID(ctx.UserID)
 	if err != nil {
 		res.WriteHeader(http.StatusBadRequest)
 		return

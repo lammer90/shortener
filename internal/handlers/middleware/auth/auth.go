@@ -50,7 +50,7 @@ func (c Authenticator) FindURLByUser(res http.ResponseWriter, req *http.Request)
 		return
 	}
 	c.shortener.FindURLByUser(res, req, &handlers.RequestContext{
-		UserId: userId,
+		UserID: userId,
 	})
 }
 
@@ -60,13 +60,13 @@ type RequestWithId struct {
 }
 
 func (c Authenticator) checkAuth(res http.ResponseWriter, req *http.Request) *handlers.RequestContext {
-	userId := c.findAuth(req)
-	if userId == "" {
-		userId = uuid.New().String()
+	userID := c.findAuth(req)
+	if userID == "" {
+		userID = uuid.New().String()
 	}
 
-	c.repository.Save(userId)
-	token, _ := buildJWTString(c.privateKey, userId)
+	c.repository.Save(userID)
+	token, _ := buildJWTString(c.privateKey, userID)
 	http.SetCookie(res, &http.Cookie{
 		Name:  "Authorization",
 		Value: token,
@@ -74,7 +74,7 @@ func (c Authenticator) checkAuth(res http.ResponseWriter, req *http.Request) *ha
 	})
 
 	return &handlers.RequestContext{
-		UserId: userId,
+		UserID: userID,
 	}
 }
 
@@ -82,7 +82,7 @@ func (c Authenticator) findAuth(req *http.Request) string {
 	userId := ""
 	for _, cookie := range req.Cookies() {
 		if cookie.Name == "Authorization" {
-			userId = getUserId(cookie.Value, c.privateKey, c.repository)
+			userId = getUserId(cookie.Value, c.privateKey)
 		}
 	}
 	return userId
@@ -93,7 +93,7 @@ type Claims struct {
 	UserID string
 }
 
-func getUserId(tokenString string, privateKey string, repository userstorage.Repository) string {
+func getUserId(tokenString string, privateKey string) string {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims,
 		func(t *jwt.Token) (interface{}, error) {
@@ -108,19 +108,14 @@ func getUserId(tokenString string, privateKey string, repository userstorage.Rep
 		return ""
 	}
 
-	if _, ok, _ := repository.Find(claims.UserID); !ok {
-		logger.Log.Info("Token didn't find")
-		return ""
-	}
-
 	logger.Log.Info("Token is valid")
 	return claims.UserID
 }
 
-func buildJWTString(privateKey string, userId string) (string, error) {
+func buildJWTString(privateKey string, userID string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{},
-		UserID:           userId,
+		UserID:           userID,
 	})
 
 	tokenString, err := token.SignedString([]byte(privateKey))

@@ -3,7 +3,7 @@ package handlers
 import "net/http"
 
 type RequestContext struct {
-	UserId string
+	UserID string
 }
 
 type ShortenerRestProvider interface {

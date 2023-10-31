@@ -12,8 +12,8 @@ type userAndValue struct {
 
 type mockStorage map[string]*userAndValue
 
-func (m mockStorage) Save(id string, value string, userId string) error {
-	m[id] = &userAndValue{userId, value}
+func (m mockStorage) Save(id string, value string, userID string) error {
+	m[id] = &userAndValue{userID, value}
 	return nil
 }
 

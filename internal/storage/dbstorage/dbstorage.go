@@ -19,13 +19,13 @@ func New(db *sql.DB) dbStorage {
 	return dbStorage{db: db}
 }
 
-func (d dbStorage) Save(key, value, userId string) error {
+func (d dbStorage) Save(key, value, userID string) error {
 	_, err := d.db.ExecContext(context.Background(), `
         INSERT INTO shorts
         (short_url, original_url, user_id)
         VALUES
         ($1, $2, $3);
-    `, key, value, userId)
+    `, key, value, userID)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
@@ -93,18 +93,22 @@ func (d dbStorage) FindByUserID(userID string) (map[string]string, error) {
             s.user_id = $1
     `, userID)
 
+	if err != nil {
+		return nil, err
+	}
+
 	type result struct {
-		ShortUrl    string
-		OriginalUrl string
+		ShortURL    string
+		OriginalURL string
 	}
 
 	for rows.Next() {
 		var r result
-		err = rows.Scan(&r.ShortUrl, &r.OriginalUrl)
+		err = rows.Scan(&r.ShortURL, &r.OriginalURL)
 		if err != nil {
 			return nil, err
 		}
-		resultMap[r.ShortUrl] = r.OriginalUrl
+		resultMap[r.ShortURL] = r.OriginalURL
 	}
 	err = rows.Err()
 	if err != nil {

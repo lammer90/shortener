@@ -13,12 +13,12 @@ type fileStorage struct {
 	file    *os.File
 }
 
-func (f fileStorage) Save(id string, value string, userId string) error {
+func (f fileStorage) Save(id string, value string, userID string) error {
 	if savedValue, ok, err := f.storage.Find(id); err != nil || !ok || savedValue != value {
-		if err := f.storage.Save(id, value, userId); err != nil {
+		if err := f.storage.Save(id, value, userID); err != nil {
 			return err
 		}
-		return saveToFile(id, value, f.file)
+		return saveToFile(id, value, userID, f.file)
 	}
 	return nil
 }
@@ -29,7 +29,7 @@ func (f fileStorage) SaveBatch(shorts []*models.BatchToSave) error {
 			if err := f.storage.Save(short.ShortURL, short.OriginalURL, short.UserID); err != nil {
 				return err
 			}
-			return saveToFile(short.ShortURL, short.OriginalURL, f.file)
+			return saveToFile(short.ShortURL, short.OriginalURL, short.UserID, f.file)
 		}
 	}
 	return nil
@@ -60,14 +60,14 @@ func initStorage(storage storage.Repository, file *os.File) {
 		for _, line := range strings.Split(fileData, "\n") {
 			err := json.Unmarshal([]byte(line), &fileModel)
 			if err == nil {
-				storage.Save(fileModel.ShortURL, fileModel.OriginalURL, fileModel.UserId)
+				storage.Save(fileModel.ShortURL, fileModel.OriginalURL, fileModel.UserID)
 			}
 		}
 	}
 }
 
-func saveToFile(id string, value string, file *os.File) error {
-	fileModel := newFileModel(id, id, value)
+func saveToFile(id string, value string, userID string, file *os.File) error {
+	fileModel := newFileModel(id, id, value, userID)
 	data, err := json.Marshal(&fileModel)
 	if err != nil {
 		return err
@@ -84,13 +84,14 @@ type fileModel struct {
 	UUID        string `json:"uuid"`
 	ShortURL    string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
-	UserId      string `json:"user_id"`
+	UserID      string `json:"user_id"`
 }
 
-func newFileModel(UUID string, ShortURL string, OriginalURL string) fileModel {
+func newFileModel(UUID string, ShortURL string, OriginalURL string, UserID string) fileModel {
 	return fileModel{
 		UUID:        UUID,
 		ShortURL:    ShortURL,
 		OriginalURL: OriginalURL,
+		UserID:      UserID,
 	}
 }

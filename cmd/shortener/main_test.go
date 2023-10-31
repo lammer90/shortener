@@ -25,8 +25,8 @@ type userAndValue struct {
 
 type testStorage map[string]*userAndValue
 
-func (m testStorage) Save(id string, value string, userId string) error {
-	m[id] = &userAndValue{userId, value}
+func (m testStorage) Save(id string, value string, userID string) error {
+	m[id] = &userAndValue{userID, value}
 	return nil
 }
 
