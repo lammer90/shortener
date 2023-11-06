@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/lammer90/shortener/internal/models"
+	"github.com/lammer90/shortener/internal/service/deleter"
 	"github.com/lammer90/shortener/internal/storage"
 	"github.com/lammer90/shortener/internal/util"
 	"io"
@@ -16,16 +17,18 @@ type urlGeneratorProvider interface {
 }
 
 type ShortenerHandler struct {
-	storage   storage.Repository
-	generator urlGeneratorProvider
-	baseURL   string
+	storage        storage.Repository
+	generator      urlGeneratorProvider
+	baseURL        string
+	deleteProvider deleter.DeleteProvider
 }
 
-func New(storage storage.Repository, generator urlGeneratorProvider, baseURL string) ShortenerRestProviderWithContext {
+func New(storage storage.Repository, generator urlGeneratorProvider, baseURL string, del deleter.DeleteProvider) ShortenerRestProviderWithContext {
 	return ShortenerHandler{
-		storage:   storage,
-		generator: generator,
-		baseURL:   baseURL,
+		storage:        storage,
+		generator:      generator,
+		baseURL:        baseURL,
+		deleteProvider: del,
 	}
 }
 
@@ -56,8 +59,12 @@ func (s ShortenerHandler) SaveShortURL(res http.ResponseWriter, req *http.Reques
 func (s ShortenerHandler) FindByShortURL(res http.ResponseWriter, req *http.Request, ctx *RequestContext) {
 	arr := strings.Split(req.URL.String(), "/")
 	address, ok, err := s.storage.Find(arr[len(arr)-1])
-	if !ok || err != nil || !util.ValidGetURL(req.URL.String()) {
+	if address == "" || err != nil || !util.ValidGetURL(req.URL.String()) {
 		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if !ok {
+		res.WriteHeader(http.StatusGone)
 		return
 	}
 	res.Header().Set("Location", address)
@@ -148,4 +155,20 @@ func (s ShortenerHandler) FindURLByUser(res http.ResponseWriter, req *http.Reque
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
+}
+
+func (s ShortenerHandler) Delete(res http.ResponseWriter, req *http.Request, ctx *RequestContext) {
+	var urls []string
+	dec := json.NewDecoder(req.Body)
+	err := dec.Decode(&urls)
+	if err != nil {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	var deletingURLs []*deleter.DeletingURL
+	for _, url := range urls {
+		deletingURLs = append(deletingURLs, deleter.NewDeletingURL(url, ctx.UserID))
+	}
+	go s.deleteProvider.Delete(deleter.NewDeleteMessage(deletingURLs))
+	res.WriteHeader(http.StatusAccepted)
 }

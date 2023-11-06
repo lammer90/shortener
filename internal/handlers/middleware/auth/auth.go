@@ -54,6 +54,11 @@ func (c Authenticator) FindURLByUser(res http.ResponseWriter, req *http.Request)
 	})
 }
 
+func (c Authenticator) Delete(res http.ResponseWriter, req *http.Request) {
+	requestContext := c.checkAuth(res, req)
+	c.shortener.Delete(res, req, requestContext)
+}
+
 func (c Authenticator) checkAuth(res http.ResponseWriter, req *http.Request) *handlers.RequestContext {
 	userID := c.findAuth(req)
 	if userID == "" {

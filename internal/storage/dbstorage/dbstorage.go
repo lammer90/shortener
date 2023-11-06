@@ -68,18 +68,23 @@ func (d dbStorage) SaveBatch(shorts []*models.BatchToSave) error {
 func (d dbStorage) Find(key string) (string, bool, error) {
 	row := d.db.QueryRowContext(context.Background(), `
         SELECT
-            s.original_url
+            s.original_url,
+        	s.id_deleted
         FROM shorts s
         WHERE
             s.short_url = $1
     `, key)
 
-	var value string
-	err := row.Scan(&value)
+	type result struct {
+		OriginalURL string
+		IsDeleted   bool
+	}
+	var r result
+	err := row.Scan(&r.OriginalURL, &r.IsDeleted)
 	if err != nil {
 		return "", false, err
 	}
-	return value, true, nil
+	return r.OriginalURL, !r.IsDeleted, nil
 }
 
 func (d dbStorage) FindByUserID(userID string) (map[string]string, error) {
@@ -117,13 +122,21 @@ func (d dbStorage) FindByUserID(userID string) (map[string]string, error) {
 	return resultMap, nil
 }
 
+func (d dbStorage) Delete(keys []string, userID string) error {
+	query := `UPDATE shorts SET id_deleted = true WHERE short_url IN ($1, $2, $3, $4) AND user_id = $5`
+	params := params(keys)
+	_, err := d.db.ExecContext(context.Background(), query, params[0], params[1], params[2], params[3], userID)
+	return err
+}
+
 func initDB(db *sql.DB) {
 	ctx := context.Background()
 	db.ExecContext(ctx, `
         CREATE TABLE IF NOT EXISTS shorts (
             short_url varchar,
             original_url varchar,
-            user_id varchar
+            user_id varchar,
+            id_deleted boolean default false
         )
     `)
 	db.ExecContext(ctx, `
@@ -146,4 +159,16 @@ func findByOriginal(db *sql.DB, value string) string {
 		return ""
 	}
 	return shortURL
+}
+
+func params(keys []string) [5]string {
+	var arr [5]string
+	for i := 0; i < 4; i++ {
+		if i+1 <= len(keys) {
+			arr[i] = keys[i]
+		} else {
+			arr[i] = ""
+		}
+	}
+	return arr
 }

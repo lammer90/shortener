@@ -43,6 +43,10 @@ func (f fileStorage) FindByUserID(userID string) (map[string]string, error) {
 	return f.storage.FindByUserID(userID)
 }
 
+func (f fileStorage) Delete(keys []string, userID string) error {
+	return f.storage.Delete(keys, userID)
+}
+
 func New(storage storage.Repository, file *os.File) storage.Repository {
 	initStorage(storage, file)
 	return fileStorage{

@@ -48,6 +48,13 @@ func (m testStorage) FindByUserID(userID string) (map[string]string, error) {
 	return result, nil
 }
 
+func (m testStorage) Delete(keys []string, userID string) error {
+	for _, key := range keys {
+		m[key] = nil
+	}
+	return nil
+}
+
 var testStorageImpl testStorage = make(map[string]*userAndValue)
 
 type mockGenerator struct{}
@@ -174,7 +181,7 @@ func TestGetShortenerHandler(t *testing.T) {
 			request.Header.Set("Content-Type", "text/plain")
 
 			w := httptest.NewRecorder()
-			handler := New(testStorageImpl, mockGeneratorImpl, "http://localhost:8080")
+			handler := New(testStorageImpl, mockGeneratorImpl, "http://localhost:8080", nil)
 			if test.request.requestMethod == "GET" {
 				handler.FindByShortURL(w, request, &RequestContext{""})
 			} else if test.request.requestMethod == "POST" {

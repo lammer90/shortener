@@ -11,6 +11,7 @@ import (
 	"github.com/lammer90/shortener/internal/handlers/middleware/logginer"
 	"github.com/lammer90/shortener/internal/handlers/ping"
 	"github.com/lammer90/shortener/internal/logger"
+	"github.com/lammer90/shortener/internal/service/deleter/async"
 	"github.com/lammer90/shortener/internal/storage"
 	"github.com/lammer90/shortener/internal/storage/dbstorage"
 	"github.com/lammer90/shortener/internal/storage/filestorage"
@@ -28,12 +29,15 @@ func main() {
 	config.InitConfig()
 	logger.InitLogger("info")
 	st, userSt, cl, db := getActualStorage()
+	delProvider, ch1, ch2 := async.New(st)
 	defer cl.Close()
+	defer close(ch1)
+	defer close(ch2)
 	http.ListenAndServe(config.ServAddress, shortenerRouter(
 		auth.New(userSt, config.PrivateKey,
 			compressor.New(
 				logginer.New(
-					handlers.New(st, base64generator.New(), config.BaseURL)))),
+					handlers.New(st, base64generator.New(), config.BaseURL, delProvider)))),
 		ping.New(db)))
 }
 
@@ -45,6 +49,7 @@ func shortenerRouter(handler handlers.ShortenerRestProvider, ping ping.Ping) chi
 	r.Post("/api/shorten/batch", handler.SaveShortURLBatch)
 	r.Get("/ping", ping.Ping)
 	r.Get("/api/user/urls", handler.FindURLByUser)
+	r.Delete("/api/user/urls", handler.Delete)
 	return r
 }
 

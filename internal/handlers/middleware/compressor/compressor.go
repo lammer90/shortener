@@ -38,6 +38,10 @@ func (c Compressor) FindURLByUser(res http.ResponseWriter, req *http.Request, ct
 	compress(res, req, ctx, c.shortener.FindURLByUser)
 }
 
+func (c Compressor) Delete(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
+	compress(res, req, ctx, c.shortener.Delete)
+}
+
 type compressWriter struct {
 	http.ResponseWriter
 	zw *gzip.Writer

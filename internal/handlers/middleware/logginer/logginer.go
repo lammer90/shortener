@@ -38,6 +38,10 @@ func (l Logging) FindURLByUser(res http.ResponseWriter, req *http.Request, ctx *
 	log(res, req, ctx, l.shortener.FindURLByUser)
 }
 
+func (l Logging) Delete(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
+	log(res, req, ctx, l.shortener.Delete)
+}
+
 type (
 	responseData struct {
 		status int
