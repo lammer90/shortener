@@ -1,8 +1,10 @@
 package async
 
 import (
+	"github.com/lammer90/shortener/internal/logger"
 	"github.com/lammer90/shortener/internal/service/deleter"
 	"github.com/lammer90/shortener/internal/storage"
+	"strings"
 	"time"
 )
 
@@ -41,7 +43,7 @@ func (d Deleter) Delete(message *deleter.DeleteMessage) {
 }
 
 func (d Deleter) InitJobsWorker() {
-	ticker := time.NewTicker(2 * time.Second)
+	ticker := time.NewTicker(1 * time.Second)
 
 	var urls []string
 	var previousUserID string
@@ -51,6 +53,7 @@ func (d Deleter) InitJobsWorker() {
 		case url := <-d.jobs:
 			urls = append(urls, url.DeletingURL)
 			if len(urls) == 4 || (url.UserID != previousUserID && previousUserID != "") {
+				logger.Log.Info("sendBatch " + strings.Join(urls[:], ",") + " " + previousUserID)
 				d.batch <- newBatch(urls, previousUserID)
 				urls = nil
 			}
@@ -59,6 +62,7 @@ func (d Deleter) InitJobsWorker() {
 			if len(urls) == 0 {
 				continue
 			}
+			logger.Log.Info("sendBatch " + strings.Join(urls[:], ",") + " " + previousUserID)
 			d.batch <- newBatch(urls, previousUserID)
 			urls = nil
 		}

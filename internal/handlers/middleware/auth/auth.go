@@ -82,7 +82,6 @@ func (c Authenticator) findAuth(req *http.Request) string {
 	userID := ""
 	for _, cookie := range req.Cookies() {
 		if cookie.Name == "Authorization" {
-			logger.Log.Info("Found Authorization token")
 			userID = getUserID(cookie.Value, c.privateKey)
 		}
 	}
@@ -104,13 +103,9 @@ func getUserID(tokenString string, privateKey string) string {
 		logger.Log.Info(err.Error())
 		return ""
 	}
-
 	if !token.Valid {
-		logger.Log.Info("Token is not valid")
 		return ""
 	}
-
-	logger.Log.Info("Token is valid")
 	return claims.UserID
 }
 
