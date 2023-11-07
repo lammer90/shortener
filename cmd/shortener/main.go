@@ -6,15 +6,20 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/lammer90/shortener/internal/config"
 	"github.com/lammer90/shortener/internal/handlers"
+	"github.com/lammer90/shortener/internal/handlers/middleware/auth"
 	"github.com/lammer90/shortener/internal/handlers/middleware/compressor"
 	"github.com/lammer90/shortener/internal/handlers/middleware/logginer"
 	"github.com/lammer90/shortener/internal/handlers/ping"
 	"github.com/lammer90/shortener/internal/logger"
+	"github.com/lammer90/shortener/internal/service/deleter/async"
 	"github.com/lammer90/shortener/internal/storage"
 	"github.com/lammer90/shortener/internal/storage/dbstorage"
 	"github.com/lammer90/shortener/internal/storage/filestorage"
 	"github.com/lammer90/shortener/internal/storage/inmemory"
 	"github.com/lammer90/shortener/internal/urlgenerator/base64generator"
+	"github.com/lammer90/shortener/internal/userstorage"
+	"github.com/lammer90/shortener/internal/userstorage/dbuserstorage"
+	"github.com/lammer90/shortener/internal/userstorage/inmemoryuser"
 	"io"
 	"net/http"
 	"os"
@@ -23,12 +28,16 @@ import (
 func main() {
 	config.InitConfig()
 	logger.InitLogger("info")
-	st, cl, db := getActualStorage()
+	st, userSt, cl, db := getActualStorage()
+	delProvider, ch1, ch2 := async.New(st)
 	defer cl.Close()
+	defer close(ch1)
+	defer close(ch2)
 	http.ListenAndServe(config.ServAddress, shortenerRouter(
-		compressor.New(
-			logginer.New(
-				handlers.New(st, base64generator.New(), config.BaseURL))),
+		auth.New(userSt, config.PrivateKey,
+			compressor.New(
+				logginer.New(
+					handlers.New(st, base64generator.New(), config.BaseURL, delProvider)))),
 		ping.New(db)))
 }
 
@@ -39,16 +48,18 @@ func shortenerRouter(handler handlers.ShortenerRestProvider, ping ping.Ping) chi
 	r.Post("/api/shorten", handler.SaveShortURLApi)
 	r.Post("/api/shorten/batch", handler.SaveShortURLBatch)
 	r.Get("/ping", ping.Ping)
+	r.Get("/api/user/urls", handler.FindURLByUser)
+	r.Delete("/api/user/urls", handler.Delete)
 	return r
 }
 
-func getActualStorage() (storage.Repository, io.Closer, *sql.DB) {
+func getActualStorage() (storage.Repository, userstorage.Repository, io.Closer, *sql.DB) {
 	if config.DataSource != "" {
 		db := InitDB("pgx", config.DataSource)
-		return dbstorage.New(db), db, db
+		return dbstorage.New(db), dbuserstorage.New(db), db, db
 	} else {
 		file := openFile(config.FileStoragePath)
-		return filestorage.New(inmemory.New(), file), file, nil
+		return filestorage.New(inmemory.New(), file), inmemoryuser.New(), file, nil
 	}
 }
 

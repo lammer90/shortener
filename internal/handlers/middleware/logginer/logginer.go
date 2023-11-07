@@ -9,29 +9,37 @@ import (
 )
 
 type Logging struct {
-	shortener handlers.ShortenerRestProvider
+	shortener handlers.ShortenerRestProviderWithContext
 }
 
-func New(shortener handlers.ShortenerRestProvider) handlers.ShortenerRestProvider {
+func New(shortener handlers.ShortenerRestProviderWithContext) handlers.ShortenerRestProviderWithContext {
 	return Logging{
 		shortener,
 	}
 }
 
-func (l Logging) SaveShortURL(res http.ResponseWriter, req *http.Request) {
-	log(res, req, l.shortener.SaveShortURL)
+func (l Logging) SaveShortURL(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
+	log(res, req, ctx, l.shortener.SaveShortURL)
 }
 
-func (l Logging) FindByShortURL(res http.ResponseWriter, req *http.Request) {
-	log(res, req, l.shortener.FindByShortURL)
+func (l Logging) FindByShortURL(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
+	log(res, req, ctx, l.shortener.FindByShortURL)
 }
 
-func (l Logging) SaveShortURLApi(res http.ResponseWriter, req *http.Request) {
-	log(res, req, l.shortener.SaveShortURLApi)
+func (l Logging) SaveShortURLApi(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
+	log(res, req, ctx, l.shortener.SaveShortURLApi)
 }
 
-func (l Logging) SaveShortURLBatch(res http.ResponseWriter, req *http.Request) {
-	log(res, req, l.shortener.SaveShortURLBatch)
+func (l Logging) SaveShortURLBatch(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
+	log(res, req, ctx, l.shortener.SaveShortURLBatch)
+}
+
+func (l Logging) FindURLByUser(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
+	log(res, req, ctx, l.shortener.FindURLByUser)
+}
+
+func (l Logging) Delete(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
+	log(res, req, ctx, l.shortener.Delete)
 }
 
 type (
@@ -57,7 +65,7 @@ func (r *loggingResponseWriter) WriteHeader(statusCode int) {
 	r.responseData.status = statusCode
 }
 
-func log(res http.ResponseWriter, req *http.Request, f func(http.ResponseWriter, *http.Request)) {
+func log(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext, f func(http.ResponseWriter, *http.Request, *handlers.RequestContext)) {
 	start := time.Now()
 
 	responseData := &responseData{
@@ -69,7 +77,7 @@ func log(res http.ResponseWriter, req *http.Request, f func(http.ResponseWriter,
 		responseData:   responseData,
 	}
 
-	f(&lw, req)
+	f(&lw, req, ctx)
 
 	duration := time.Since(start)
 
