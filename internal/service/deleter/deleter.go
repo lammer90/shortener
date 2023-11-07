@@ -14,11 +14,7 @@ type DeleteMessage struct {
 }
 
 func NewDeleteMessage(urls []*DeletingURL) *DeleteMessage {
-	var result []*DeletingURL
-	for _, url := range urls {
-		result = append(result, url)
-	}
-	return &DeleteMessage{result}
+	return &DeleteMessage{urls}
 }
 
 type DeleteProvider interface {

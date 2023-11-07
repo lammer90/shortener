@@ -41,7 +41,7 @@ func (d Deleter) Delete(message *deleter.DeleteMessage) {
 }
 
 func (d Deleter) InitJobsWorker() {
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(2 * time.Second)
 
 	var urls []string
 	var previousUserID string
