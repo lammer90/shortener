@@ -30,4 +30,5 @@ type Repository interface {
 	SaveBatch([]*models.BatchToSave) error
 	Find(string) (string, bool, error)
 	FindByUserID(string) (map[string]string, error)
+	Delete([]string, string) error
 }

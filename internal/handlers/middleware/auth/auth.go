@@ -54,6 +54,11 @@ func (c Authenticator) FindURLByUser(res http.ResponseWriter, req *http.Request)
 	})
 }
 
+func (c Authenticator) Delete(res http.ResponseWriter, req *http.Request) {
+	requestContext := c.checkAuth(res, req)
+	c.shortener.Delete(res, req, requestContext)
+}
+
 func (c Authenticator) checkAuth(res http.ResponseWriter, req *http.Request) *handlers.RequestContext {
 	userID := c.findAuth(req)
 	if userID == "" {
@@ -77,7 +82,6 @@ func (c Authenticator) findAuth(req *http.Request) string {
 	userID := ""
 	for _, cookie := range req.Cookies() {
 		if cookie.Name == "Authorization" {
-			logger.Log.Info("Found Authorization token")
 			userID = getUserID(cookie.Value, c.privateKey)
 		}
 	}
@@ -99,13 +103,9 @@ func getUserID(tokenString string, privateKey string) string {
 		logger.Log.Info(err.Error())
 		return ""
 	}
-
 	if !token.Valid {
-		logger.Log.Info("Token is not valid")
 		return ""
 	}
-
-	logger.Log.Info("Token is valid")
 	return claims.UserID
 }
 

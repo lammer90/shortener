@@ -42,6 +42,13 @@ func (m mockStorage) FindByUserID(userID string) (map[string]string, error) {
 	return result, nil
 }
 
+func (m mockStorage) Delete(keys []string, userID string) error {
+	for _, key := range keys {
+		m[key] = nil
+	}
+	return nil
+}
+
 var mockStorageImpl mockStorage = make(map[string]*userAndValue)
 
 func New() storage.Repository {

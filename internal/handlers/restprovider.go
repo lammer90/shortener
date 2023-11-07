@@ -12,6 +12,7 @@ type ShortenerRestProvider interface {
 	SaveShortURLApi(http.ResponseWriter, *http.Request)
 	SaveShortURLBatch(http.ResponseWriter, *http.Request)
 	FindURLByUser(http.ResponseWriter, *http.Request)
+	Delete(http.ResponseWriter, *http.Request)
 }
 
 type ShortenerRestProviderWithContext interface {
@@ -20,4 +21,5 @@ type ShortenerRestProviderWithContext interface {
 	SaveShortURLApi(http.ResponseWriter, *http.Request, *RequestContext)
 	SaveShortURLBatch(http.ResponseWriter, *http.Request, *RequestContext)
 	FindURLByUser(http.ResponseWriter, *http.Request, *RequestContext)
+	Delete(http.ResponseWriter, *http.Request, *RequestContext)
 }
