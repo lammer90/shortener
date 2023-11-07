@@ -165,10 +165,10 @@ func (s ShortenerHandler) Delete(res http.ResponseWriter, req *http.Request, ctx
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	var deletingURLs []*deleter.DeletingURL
+	var deletingURL []*deleter.DeletingURL
 	for _, url := range urls {
-		deletingURLs = append(deletingURLs, deleter.NewDeletingURL(url, ctx.UserID))
+		deletingURL = append(deletingURL, deleter.NewDeletingURL(url, ctx.UserID))
 	}
-	go s.deleteProvider.Delete(deleter.NewDeleteMessage(deletingURLs))
+	go s.deleteProvider.Delete(deleter.NewDeleteMessage(deletingURL))
 	res.WriteHeader(http.StatusAccepted)
 }
