@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/lammer90/shortener/internal/config"
 	"github.com/lammer90/shortener/internal/handlers"
+	"github.com/lammer90/shortener/internal/handlers/middleware/auth"
 	"github.com/lammer90/shortener/internal/handlers/middleware/compressor"
 	"github.com/lammer90/shortener/internal/handlers/middleware/logginer"
 	"github.com/lammer90/shortener/internal/handlers/ping"
@@ -17,28 +18,73 @@ import (
 	"testing"
 )
 
-type testStorage map[string]string
+type userAndValue struct {
+	UserID string
+	Value  string
+}
 
-func (t testStorage) Save(id string, value string) error {
-	t[id] = value
+type testStorage map[string]*userAndValue
+
+func (m testStorage) Save(id string, value string, userID string) error {
+	m[id] = &userAndValue{userID, value}
 	return nil
 }
 
-func (t testStorage) SaveBatch(shorts []*models.BatchToSave) error {
+func (m testStorage) SaveBatch(shorts []*models.BatchToSave) error {
 	for _, short := range shorts {
-		t[short.ShortURL] = short.OriginalURL
+		m[short.ShortURL] = &userAndValue{short.UserID, short.OriginalURL}
 	}
 	return nil
 }
 
-func (t testStorage) Find(id string) (string, bool, error) {
-	val, ok := t[id]
-	return val, ok, nil
+func (m testStorage) Find(id string) (string, bool, error) {
+	if val, ok := m[id]; ok {
+		return val.Value, ok, nil
+	} else {
+		return "", ok, nil
+	}
 }
 
-var testStorageImpl testStorage = make(map[string]string)
+func (m testStorage) FindByUserID(userID string) (map[string]string, error) {
+	result := make(map[string]string, 0)
+	for key, val := range m {
+		if val.UserID == userID {
+			result[key] = val.Value
+		}
+	}
+	return result, nil
+}
+
+func (m testStorage) Delete(keys []string, userID string) error {
+	for _, key := range keys {
+		m[key] = nil
+	}
+	return nil
+}
+
+var testStorageImpl testStorage = make(map[string]*userAndValue)
 
 type mockGenerator struct{}
+
+type testUserStorage struct {
+	arr []string
+}
+
+var testUserStorageImpl testUserStorage = testUserStorage{make([]string, 0)}
+
+func (t testUserStorage) Save(name string) error {
+	t.arr = append(t.arr, name)
+	return nil
+}
+
+func (t testUserStorage) Find(name string) (string, bool, error) {
+	for _, val := range t.arr {
+		if val == name {
+			return val, true, nil
+		}
+	}
+	return "", false, nil
+}
 
 func (m mockGenerator) GenerateURL(data string) string {
 	if data == "https://practicum.yandex.ru/" {
@@ -54,7 +100,7 @@ func (p pingMock) Ping() error {
 }
 
 func TestGetShortenerHandler(t *testing.T) {
-	ts := httptest.NewServer(shortenerRouter(compressor.New(logginer.New(handlers.New(testStorageImpl, mockGenerator{}, "http://localhost:8080"))), ping.New(pingMock{})))
+	ts := httptest.NewServer(shortenerRouter(auth.New(testUserStorageImpl, "test", compressor.New(logginer.New(handlers.New(testStorageImpl, mockGenerator{}, "http://localhost:8080", nil)))), ping.New(pingMock{})))
 	config.InitConfig()
 	logger.InitLogger("info")
 	defer ts.Close()
@@ -252,7 +298,11 @@ func TestGetShortenerHandler(t *testing.T) {
 			resBody, err := io.ReadAll(resp.Body)
 
 			require.NoError(t, err)
-			assert.Equal(t, testStorageImpl[test.want.storageKey], test.want.storageValue)
+			if testStorageImpl[test.want.storageKey] == nil {
+				assert.Equal(t, "", test.want.storageValue)
+			} else {
+				assert.Equal(t, testStorageImpl[test.want.storageKey].Value, test.want.storageValue)
+			}
 			if test.want.response != "it_does_not_matter" {
 				assert.Equal(t, string(resBody), test.want.response)
 				assert.Equal(t, resp.Header.Get(test.want.headerName), test.want.headerValue)

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/lammer90/shortener/internal/models"
+	"github.com/lammer90/shortener/internal/service/deleter"
 	"github.com/lammer90/shortener/internal/storage"
 	"github.com/lammer90/shortener/internal/util"
 	"io"
@@ -11,38 +12,34 @@ import (
 	"strings"
 )
 
-type shortenerStorageProvider interface {
-	Save(string, string) error
-	SaveBatch([]*models.BatchToSave) error
-	Find(string) (string, bool, error)
-}
-
 type urlGeneratorProvider interface {
 	GenerateURL(string) string
 }
 
 type ShortenerHandler struct {
-	storage   shortenerStorageProvider
-	generator urlGeneratorProvider
-	baseURL   string
+	storage        storage.Repository
+	generator      urlGeneratorProvider
+	baseURL        string
+	deleteProvider deleter.DeleteProvider
 }
 
-func New(storage shortenerStorageProvider, generator urlGeneratorProvider, baseURL string) ShortenerRestProvider {
+func New(storage storage.Repository, generator urlGeneratorProvider, baseURL string, del deleter.DeleteProvider) ShortenerRestProviderWithContext {
 	return ShortenerHandler{
-		storage,
-		generator,
-		baseURL,
+		storage:        storage,
+		generator:      generator,
+		baseURL:        baseURL,
+		deleteProvider: del,
 	}
 }
 
-func (s ShortenerHandler) SaveShortURL(res http.ResponseWriter, req *http.Request) {
+func (s ShortenerHandler) SaveShortURL(res http.ResponseWriter, req *http.Request, ctx *RequestContext) {
 	body, err := io.ReadAll(req.Body)
 	if err != nil || !util.ValidPostURL(req.URL.String()) || len(body) == 0 {
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	shortURL := s.generator.GenerateURL(string(body[:]))
-	err = s.storage.Save(shortURL, string(body[:]))
+	err = s.storage.Save(shortURL, string(body[:]), ctx.UserID)
 	if err != nil {
 		target := new(storage.ErrConflictDB)
 		if errors.As(err, &target) {
@@ -59,18 +56,22 @@ func (s ShortenerHandler) SaveShortURL(res http.ResponseWriter, req *http.Reques
 	res.Write([]byte(s.baseURL + "/" + shortURL))
 }
 
-func (s ShortenerHandler) FindByShortURL(res http.ResponseWriter, req *http.Request) {
+func (s ShortenerHandler) FindByShortURL(res http.ResponseWriter, req *http.Request, ctx *RequestContext) {
 	arr := strings.Split(req.URL.String(), "/")
 	address, ok, err := s.storage.Find(arr[len(arr)-1])
-	if !ok || err != nil || !util.ValidGetURL(req.URL.String()) {
+	if address == "" || err != nil || !util.ValidGetURL(req.URL.String()) {
 		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if !ok {
+		res.WriteHeader(http.StatusGone)
 		return
 	}
 	res.Header().Set("Location", address)
 	res.WriteHeader(http.StatusTemporaryRedirect)
 }
 
-func (s ShortenerHandler) SaveShortURLApi(res http.ResponseWriter, req *http.Request) {
+func (s ShortenerHandler) SaveShortURLApi(res http.ResponseWriter, req *http.Request, ctx *RequestContext) {
 	var request models.Request
 	dec := json.NewDecoder(req.Body)
 	err := dec.Decode(&request)
@@ -79,7 +80,7 @@ func (s ShortenerHandler) SaveShortURLApi(res http.ResponseWriter, req *http.Req
 		return
 	}
 	shortURL := s.generator.GenerateURL(request.URL)
-	err = s.storage.Save(shortURL, request.URL)
+	err = s.storage.Save(shortURL, request.URL, ctx.UserID)
 	if err != nil {
 		target := new(storage.ErrConflictDB)
 		if errors.As(err, &target) {
@@ -105,7 +106,7 @@ func (s ShortenerHandler) SaveShortURLApi(res http.ResponseWriter, req *http.Req
 	}
 }
 
-func (s ShortenerHandler) SaveShortURLBatch(res http.ResponseWriter, req *http.Request) {
+func (s ShortenerHandler) SaveShortURLBatch(res http.ResponseWriter, req *http.Request, ctx *RequestContext) {
 	shorts := make([]models.BatchRequest, 0)
 	toSave := make([]*models.BatchToSave, 0)
 	response := make([]*models.BatchResponse, 0)
@@ -118,7 +119,7 @@ func (s ShortenerHandler) SaveShortURLBatch(res http.ResponseWriter, req *http.R
 
 	for _, short := range shorts {
 		shortURL := s.generator.GenerateURL(short.OriginalURL)
-		toSave = append(toSave, models.NewBatchToSave(shortURL, short.OriginalURL))
+		toSave = append(toSave, models.NewBatchToSave(shortURL, short.OriginalURL, ctx.UserID))
 		response = append(response, models.NewBatchResponse(short.CorrelationID, s.baseURL+"/"+shortURL))
 	}
 	s.storage.SaveBatch(toSave)
@@ -129,4 +130,45 @@ func (s ShortenerHandler) SaveShortURLBatch(res http.ResponseWriter, req *http.R
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
+}
+
+func (s ShortenerHandler) FindURLByUser(res http.ResponseWriter, req *http.Request, ctx *RequestContext) {
+	results, err := s.storage.FindByUserID(ctx.UserID)
+	if err != nil {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if len(results) == 0 {
+		res.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	response := make([]*models.UserResult, 0)
+	for key, val := range results {
+		response = append(response, models.NewUserResult(s.baseURL+"/"+key, val))
+	}
+
+	res.Header().Set("Content-Type", "application/json")
+	res.WriteHeader(http.StatusOK)
+	enc := json.NewEncoder(res)
+	if err := enc.Encode(response); err != nil {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+}
+
+func (s ShortenerHandler) Delete(res http.ResponseWriter, req *http.Request, ctx *RequestContext) {
+	var urls []string
+	dec := json.NewDecoder(req.Body)
+	err := dec.Decode(&urls)
+	if err != nil {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	var deletingURL []*deleter.DeletingURL
+	for _, url := range urls {
+		deletingURL = append(deletingURL, deleter.NewDeletingURL(url, ctx.UserID))
+	}
+	go s.deleteProvider.Delete(deleter.NewDeleteMessage(deletingURL))
+	res.WriteHeader(http.StatusAccepted)
 }

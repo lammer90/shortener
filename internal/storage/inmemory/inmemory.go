@@ -5,26 +5,51 @@ import (
 	"github.com/lammer90/shortener/internal/storage"
 )
 
-type mockStorage map[string]string
+type userAndValue struct {
+	UserID string
+	Value  string
+}
 
-func (m mockStorage) Save(id string, value string) error {
-	m[id] = value
+type mockStorage map[string]*userAndValue
+
+func (m mockStorage) Save(id string, value string, userID string) error {
+	m[id] = &userAndValue{userID, value}
 	return nil
 }
 
 func (m mockStorage) SaveBatch(shorts []*models.BatchToSave) error {
 	for _, short := range shorts {
-		m[short.ShortURL] = short.OriginalURL
+		m[short.ShortURL] = &userAndValue{short.UserID, short.OriginalURL}
 	}
 	return nil
 }
 
 func (m mockStorage) Find(id string) (string, bool, error) {
-	val, ok := m[id]
-	return val, ok, nil
+	if val, ok := m[id]; ok {
+		return val.Value, ok, nil
+	} else {
+		return "", ok, nil
+	}
 }
 
-var mockStorageImpl mockStorage = make(map[string]string)
+func (m mockStorage) FindByUserID(userID string) (map[string]string, error) {
+	result := make(map[string]string, 0)
+	for key, val := range m {
+		if val.UserID == userID {
+			result[key] = val.Value
+		}
+	}
+	return result, nil
+}
+
+func (m mockStorage) Delete(keys []string, userID string) error {
+	for _, key := range keys {
+		m[key] = nil
+	}
+	return nil
+}
+
+var mockStorageImpl mockStorage = make(map[string]*userAndValue)
 
 func New() storage.Repository {
 	return mockStorageImpl

@@ -26,7 +26,9 @@ func NewErrConflict(shortURL string, err error) error {
 }
 
 type Repository interface {
-	Save(string, string) error
+	Save(string, string, string) error
 	SaveBatch([]*models.BatchToSave) error
 	Find(string) (string, bool, error)
+	FindByUserID(string) (map[string]string, error)
+	Delete([]string, string) error
 }
