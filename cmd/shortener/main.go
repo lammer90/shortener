@@ -1,9 +1,15 @@
 package main
 
 import (
+	"github.com/lammer90/shortener/internal/handlers/middleware"
+	"io"
+	"net/http"
+	"os"
+
 	"database/sql"
 	"github.com/go-chi/chi/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
+
 	"github.com/lammer90/shortener/internal/config"
 	"github.com/lammer90/shortener/internal/handlers"
 	"github.com/lammer90/shortener/internal/handlers/middleware/auth"
@@ -20,9 +26,6 @@ import (
 	"github.com/lammer90/shortener/internal/userstorage"
 	"github.com/lammer90/shortener/internal/userstorage/dbuserstorage"
 	"github.com/lammer90/shortener/internal/userstorage/inmemoryuser"
-	"io"
-	"net/http"
-	"os"
 )
 
 func main() {
@@ -33,16 +36,18 @@ func main() {
 	defer cl.Close()
 	defer close(ch1)
 	defer close(ch2)
-	http.ListenAndServe(config.ServAddress, shortenerRouter(
+	r := shortenerRouter(
 		auth.New(userSt, config.PrivateKey,
 			compressor.New(
 				logginer.New(
 					handlers.New(st, base64generator.New(), config.BaseURL, delProvider)))),
-		ping.New(db)))
+		ping.New(db))
+	http.ListenAndServe(config.ServAddress, r)
 }
 
 func shortenerRouter(handler handlers.ShortenerRestProvider, ping ping.Ping) chi.Router {
 	r := chi.NewRouter()
+	r.Mount("/debug", middleware.Profiler())
 	r.Post("/", handler.SaveShortURL)
 	r.Get("/{short}", handler.FindByShortURL)
 	r.Post("/api/shorten", handler.SaveShortURLApi)
