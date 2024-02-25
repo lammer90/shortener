@@ -21,14 +21,14 @@ type Deleter struct {
 	batch      chan *Batch
 }
 
-func New(repository storage.Repository) (deleter.DeleteProvider, chan *deleter.DeletingURL, chan *Batch) {
+func New(repository storage.Repository, workers int) (deleter.DeleteProvider, chan *deleter.DeletingURL, chan *Batch) {
 	del := Deleter{
 		repository,
 		make(chan *deleter.DeletingURL, 5),
 		make(chan *Batch, 5),
 	}
 	go del.InitJobsWorker()
-	for w := 1; w <= 3; w++ {
+	for w := 1; w <= workers; w++ {
 		go del.InitBatchWorker()
 	}
 	return del, del.jobs, del.batch

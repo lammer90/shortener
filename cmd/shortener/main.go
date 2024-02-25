@@ -32,7 +32,7 @@ func main() {
 	config.InitConfig()
 	logger.InitLogger("info")
 	st, userSt, cl, db := getActualStorage()
-	delProvider, ch1, ch2 := async.New(st)
+	delProvider, ch1, ch2 := async.New(st, 3)
 	defer cl.Close()
 	defer close(ch1)
 	defer close(ch2)
