@@ -1,9 +1,10 @@
 package async
 
 import (
+	"time"
+
 	"github.com/lammer90/shortener/internal/service/deleter"
 	"github.com/lammer90/shortener/internal/storage"
-	"time"
 )
 
 type Batch struct {

@@ -2,9 +2,10 @@ package middleware
 
 import (
 	"expvar"
-	"github.com/go-chi/chi/v5"
 	"net/http"
 	"net/http/pprof"
+
+	"github.com/go-chi/chi/v5"
 )
 
 func Profiler() http.Handler {

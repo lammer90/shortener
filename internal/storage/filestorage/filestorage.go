@@ -2,10 +2,11 @@ package filestorage
 
 import (
 	"encoding/json"
-	"github.com/lammer90/shortener/internal/models"
-	"github.com/lammer90/shortener/internal/storage"
 	"os"
 	"strings"
+
+	"github.com/lammer90/shortener/internal/models"
+	"github.com/lammer90/shortener/internal/storage"
 )
 
 type fileStorage struct {

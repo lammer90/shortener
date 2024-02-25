@@ -3,13 +3,14 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"io"
+	"net/http"
+	"strings"
+
 	"github.com/lammer90/shortener/internal/models"
 	"github.com/lammer90/shortener/internal/service/deleter"
 	"github.com/lammer90/shortener/internal/storage"
 	"github.com/lammer90/shortener/internal/util"
-	"io"
-	"net/http"
-	"strings"
 )
 
 type urlGeneratorProvider interface {

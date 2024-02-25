@@ -1,9 +1,10 @@
 package async
 
 import (
+	"testing"
+
 	"github.com/lammer90/shortener/internal/models"
 	"github.com/lammer90/shortener/internal/service/deleter"
-	"testing"
 )
 
 type userAndValue struct {

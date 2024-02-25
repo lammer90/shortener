@@ -1,17 +1,18 @@
 package main
 
 import (
-	"github.com/lammer90/shortener/internal/handlers/middleware"
 	"io"
 	"net/http"
 	"os"
 
 	"database/sql"
+
 	"github.com/go-chi/chi/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/lammer90/shortener/internal/config"
 	"github.com/lammer90/shortener/internal/handlers"
+	"github.com/lammer90/shortener/internal/handlers/middleware"
 	"github.com/lammer90/shortener/internal/handlers/middleware/auth"
 	"github.com/lammer90/shortener/internal/handlers/middleware/compressor"
 	"github.com/lammer90/shortener/internal/handlers/middleware/logginer"

@@ -1,11 +1,12 @@
 package logginer
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/lammer90/shortener/internal/handlers"
 	"github.com/lammer90/shortener/internal/logger"
 	"go.uber.org/zap"
-	"net/http"
-	"time"
 )
 
 type Logging struct {
