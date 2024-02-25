@@ -2,10 +2,11 @@ package compressor
 
 import (
 	"compress/gzip"
-	"github.com/lammer90/shortener/internal/handlers"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/lammer90/shortener/internal/handlers"
 )
 
 type Compressor struct {
