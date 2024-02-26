@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func ExampleSaveShortURL() {
+func ExampleShortenerHandler_SaveShortURL() {
 	request := httptest.NewRequest("POST", "/", strings.NewReader("https://practicum.yandex.ru/"))
 	request.Header.Set("Content-Type", "text/plain")
 	w := httptest.NewRecorder()
