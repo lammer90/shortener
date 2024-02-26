@@ -13,6 +13,7 @@ func ExampleSaveShortURL() {
 	handler := New(testStorageImpl, mockGeneratorImpl, "http://localhost:8080", nil)
 	handler.SaveShortURL(w, request, &RequestContext{""})
 	res := w.Result()
+	defer res.Body.Close()
 
 	fmt.Println(res.StatusCode)
 	// Output:
