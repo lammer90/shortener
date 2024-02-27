@@ -61,7 +61,7 @@ func shortenerRouter(handler handlers.ShortenerRestProvider, ping ping.Ping) chi
 
 func getActualStorage() (storage.Repository, userstorage.Repository, io.Closer, *sql.DB) {
 	if config.DataSource != "" {
-		db := InitDB("pgx", config.DataSource)
+		db := initDB("pgx", config.DataSource)
 		return dbstorage.New(db), dbuserstorage.New(db), db, db
 	} else {
 		file := openFile(config.FileStoragePath)
@@ -74,7 +74,7 @@ func openFile(path string) *os.File {
 	return file
 }
 
-func InitDB(driverName, dataSource string) *sql.DB {
+func initDB(driverName, dataSource string) *sql.DB {
 	db, err := sql.Open(driverName, dataSource)
 	if err != nil {
 		panic(err)

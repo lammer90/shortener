@@ -5,12 +5,22 @@ import (
 	"os"
 )
 
+// ServAddress Адрес старта веб-сервера
 var ServAddress string
+
+// BaseURL Адрес для запросос в короткой сслыке
 var BaseURL string
+
+// FileStoragePath Папка для хранения данных по ссылкам
 var FileStoragePath string
+
+// DataSource Строка подключения к бд
 var DataSource string
+
+// PrivateKey Приватный ключ для подписи jwt токена
 var PrivateKey string
 
+// InitConfig Инизиализация всех параметров
 func InitConfig() {
 	initFlags()
 	initEnv()

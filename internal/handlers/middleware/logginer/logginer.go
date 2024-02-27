@@ -9,36 +9,44 @@ import (
 	"go.uber.org/zap"
 )
 
+// Logging фильтр
 type Logging struct {
 	shortener handlers.ShortenerRestProviderWithContext
 }
 
+// New Logging констуктор
 func New(shortener handlers.ShortenerRestProviderWithContext) handlers.ShortenerRestProviderWithContext {
 	return Logging{
 		shortener,
 	}
 }
 
+// SaveShortURL сократить оригинальную ссылку(ссылка в параметре), в ответ будет возвращена сокращенная.
 func (l Logging) SaveShortURL(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
 	log(res, req, ctx, l.shortener.SaveShortURL)
 }
 
+// FindByShortURL найти оригинальную ссылку по сокращенной.
 func (l Logging) FindByShortURL(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
 	log(res, req, ctx, l.shortener.FindByShortURL)
 }
 
+// SaveShortURLApi сократить оригинальную ссылку(ссылка в теле запроса), в ответ будет возвращена сокращенная.
 func (l Logging) SaveShortURLApi(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
 	log(res, req, ctx, l.shortener.SaveShortURLApi)
 }
 
+// SaveShortURLBatch сократить несколько ссылок батчом, в ответ будет возвращена сокращенная.
 func (l Logging) SaveShortURLBatch(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
 	log(res, req, ctx, l.shortener.SaveShortURLBatch)
 }
 
+// FindURLByUser найти все ссылки сокращенные пользователем.
 func (l Logging) FindURLByUser(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
 	log(res, req, ctx, l.shortener.FindURLByUser)
 }
 
+// Delete Удалить созраненные ссылки.
 func (l Logging) Delete(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
 	log(res, req, ctx, l.shortener.Delete)
 }
@@ -55,12 +63,14 @@ type (
 	}
 )
 
+// Write Записать
 func (r *loggingResponseWriter) Write(b []byte) (int, error) {
 	size, err := r.ResponseWriter.Write(b)
 	r.responseData.size += size
 	return size, err
 }
 
+// WriteHeader Записать statusCode
 func (r *loggingResponseWriter) WriteHeader(statusCode int) {
 	r.ResponseWriter.WriteHeader(statusCode)
 	r.responseData.status = statusCode

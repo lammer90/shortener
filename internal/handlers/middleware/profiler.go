@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// Profiler активировать работу профайлера
 func Profiler() http.Handler {
 	r := chi.NewRouter()
 

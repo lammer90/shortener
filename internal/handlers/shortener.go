@@ -17,6 +17,7 @@ type urlGeneratorProvider interface {
 	GenerateURL(string) string
 }
 
+// ShortenerHandler реализация ShortenerRestProvider
 type ShortenerHandler struct {
 	storage        storage.Repository
 	generator      urlGeneratorProvider
@@ -24,6 +25,7 @@ type ShortenerHandler struct {
 	deleteProvider deleter.DeleteProvider
 }
 
+// New ShortenerHandler конструктор
 func New(storage storage.Repository, generator urlGeneratorProvider, baseURL string, del deleter.DeleteProvider) ShortenerRestProviderWithContext {
 	return ShortenerHandler{
 		storage:        storage,
@@ -33,6 +35,7 @@ func New(storage storage.Repository, generator urlGeneratorProvider, baseURL str
 	}
 }
 
+// SaveShortURL сократить оригинальную ссылку(ссылка в параметре), в ответ будет возвращена сокращенная.
 func (s ShortenerHandler) SaveShortURL(res http.ResponseWriter, req *http.Request, ctx *RequestContext) {
 	body, err := io.ReadAll(req.Body)
 	if err != nil || !util.ValidPostURL(req.URL.String()) || len(body) == 0 {
@@ -57,6 +60,7 @@ func (s ShortenerHandler) SaveShortURL(res http.ResponseWriter, req *http.Reques
 	res.Write([]byte(s.baseURL + "/" + shortURL))
 }
 
+// FindByShortURL найти оригинальную ссылку по сокращенной.
 func (s ShortenerHandler) FindByShortURL(res http.ResponseWriter, req *http.Request, ctx *RequestContext) {
 	arr := strings.Split(req.URL.String(), "/")
 	address, ok, err := s.storage.Find(arr[len(arr)-1])
@@ -72,6 +76,7 @@ func (s ShortenerHandler) FindByShortURL(res http.ResponseWriter, req *http.Requ
 	res.WriteHeader(http.StatusTemporaryRedirect)
 }
 
+// SaveShortURLApi сократить оригинальную ссылку(ссылка в теле запроса), в ответ будет возвращена сокращенная.
 func (s ShortenerHandler) SaveShortURLApi(res http.ResponseWriter, req *http.Request, ctx *RequestContext) {
 	var request models.Request
 	dec := json.NewDecoder(req.Body)
@@ -107,6 +112,7 @@ func (s ShortenerHandler) SaveShortURLApi(res http.ResponseWriter, req *http.Req
 	}
 }
 
+// SaveShortURLBatch сократить несколько ссылок батчом, в ответ будет возвращена сокращенная.
 func (s ShortenerHandler) SaveShortURLBatch(res http.ResponseWriter, req *http.Request, ctx *RequestContext) {
 	shorts := make([]models.BatchRequest, 0)
 	toSave := make([]*models.BatchToSave, 0)
@@ -133,6 +139,7 @@ func (s ShortenerHandler) SaveShortURLBatch(res http.ResponseWriter, req *http.R
 	}
 }
 
+// FindURLByUser найти все ссылки сокращенные пользователем.
 func (s ShortenerHandler) FindURLByUser(res http.ResponseWriter, req *http.Request, ctx *RequestContext) {
 	results, err := s.storage.FindByUserID(ctx.UserID)
 	if err != nil {
@@ -158,6 +165,7 @@ func (s ShortenerHandler) FindURLByUser(res http.ResponseWriter, req *http.Reque
 	}
 }
 
+// Delete Удалить созраненные ссылки.
 func (s ShortenerHandler) Delete(res http.ResponseWriter, req *http.Request, ctx *RequestContext) {
 	var urls []string
 	dec := json.NewDecoder(req.Body)
