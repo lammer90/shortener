@@ -15,11 +15,13 @@ type dbStorage struct {
 	db *sql.DB
 }
 
+// New dbStorage конструктор.
 func New(db *sql.DB) dbStorage {
 	initDB(db)
 	return dbStorage{db: db}
 }
 
+// Save  сохранить ссылку с параметрами: key, value, userID.
 func (d dbStorage) Save(key, value, userID string) error {
 	_, err := d.db.ExecContext(context.Background(), `
         INSERT INTO shorts
@@ -37,6 +39,7 @@ func (d dbStorage) Save(key, value, userID string) error {
 	return err
 }
 
+// SaveBatch  сохранить батч с ссылками
 func (d dbStorage) SaveBatch(shorts []*models.BatchToSave) error {
 	tx, err := d.db.Begin()
 	if err != nil {
@@ -66,6 +69,7 @@ func (d dbStorage) SaveBatch(shorts []*models.BatchToSave) error {
 	return nil
 }
 
+// Find  Найти оригинальную ссылку по сокращенной
 func (d dbStorage) Find(key string) (string, bool, error) {
 	row := d.db.QueryRowContext(context.Background(), `
         SELECT
@@ -88,6 +92,7 @@ func (d dbStorage) Find(key string) (string, bool, error) {
 	return r.OriginalURL, !r.IsDeleted, nil
 }
 
+// Find  Найти оригинальную ссылки по владельцу
 func (d dbStorage) FindByUserID(userID string) (map[string]string, error) {
 	resultMap := make(map[string]string)
 	rows, err := d.db.QueryContext(context.Background(), `
@@ -123,6 +128,7 @@ func (d dbStorage) FindByUserID(userID string) (map[string]string, error) {
 	return resultMap, nil
 }
 
+// Delete  Удалить ссылки
 func (d dbStorage) Delete(keys []string, userID string) error {
 	query := `UPDATE shorts SET id_deleted = true WHERE short_url IN ($1, $2, $3, $4) AND user_id = $5`
 	params := params(keys)

@@ -35,12 +35,14 @@ type UserResult struct {
 	OriginalURL string `json:"original_url"`
 }
 
+// NewResponse Response констуктор.
 func NewResponse(response string) *Response {
 	return &Response{
 		Result: response,
 	}
 }
 
+// NewBatchToSave BatchToSave констуктор.
 func NewBatchToSave(shortURL, originalURL, userID string) *BatchToSave {
 	return &BatchToSave{
 		ShortURL:    shortURL,
@@ -49,6 +51,7 @@ func NewBatchToSave(shortURL, originalURL, userID string) *BatchToSave {
 	}
 }
 
+// NewBatchResponse BatchResponse констуктор.
 func NewBatchResponse(correlationID, shortURL string) *BatchResponse {
 	return &BatchResponse{
 		CorrelationID: correlationID,
@@ -56,6 +59,7 @@ func NewBatchResponse(correlationID, shortURL string) *BatchResponse {
 	}
 }
 
+// NewUserResult UserResult констуктор.
 func NewUserResult(shortURL, originalURL string) *UserResult {
 	return &UserResult{
 		ShortURL:    shortURL,

@@ -14,6 +14,7 @@ type fileStorage struct {
 	file    *os.File
 }
 
+// Save  сохранить ссылку с параметрами: key, value, userID.
 func (f fileStorage) Save(id string, value string, userID string) error {
 	if savedValue, ok, err := f.storage.Find(id); err != nil || !ok || savedValue != value {
 		if err := f.storage.Save(id, value, userID); err != nil {
@@ -24,6 +25,7 @@ func (f fileStorage) Save(id string, value string, userID string) error {
 	return nil
 }
 
+// SaveBatch  сохранить батч с ссылками
 func (f fileStorage) SaveBatch(shorts []*models.BatchToSave) error {
 	for _, short := range shorts {
 		if savedValue, ok, err := f.storage.Find(short.ShortURL); err != nil || !ok || savedValue != short.OriginalURL {
@@ -36,18 +38,22 @@ func (f fileStorage) SaveBatch(shorts []*models.BatchToSave) error {
 	return nil
 }
 
+// Find  Найти оригинальную ссылку по сокращенной
 func (f fileStorage) Find(id string) (string, bool, error) {
 	return f.storage.Find(id)
 }
 
+// Find  Найти оригинальную ссылки по владельцу
 func (f fileStorage) FindByUserID(userID string) (map[string]string, error) {
 	return f.storage.FindByUserID(userID)
 }
 
+// Delete  Удалить ссылки
 func (f fileStorage) Delete(keys []string, userID string) error {
 	return f.storage.Delete(keys, userID)
 }
 
+// New fileStorage конструктор.
 func New(storage storage.Repository, file *os.File) storage.Repository {
 	initStorage(storage, file)
 	return fileStorage{

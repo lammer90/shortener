@@ -4,8 +4,10 @@ import (
 	"go.uber.org/zap"
 )
 
+// Log основной рабочий логгер
 var Log *zap.Logger = zap.NewNop()
 
+// InitLogger активировать работу логгера
 func InitLogger(level string) error {
 	lvl, err := zap.ParseAtomicLevel(level)
 	if err != nil {
