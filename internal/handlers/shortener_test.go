@@ -1,14 +1,15 @@
 package handlers
 
 import (
-	"github.com/lammer90/shortener/internal/config"
-	"github.com/lammer90/shortener/internal/models"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/lammer90/shortener/internal/config"
+	"github.com/lammer90/shortener/internal/models"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type userAndValue struct {

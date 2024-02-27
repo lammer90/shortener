@@ -1,17 +1,18 @@
 package main
 
 import (
-	"github.com/lammer90/shortener/internal/handlers/middleware"
 	"io"
 	"net/http"
 	"os"
 
 	"database/sql"
+
 	"github.com/go-chi/chi/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/lammer90/shortener/internal/config"
 	"github.com/lammer90/shortener/internal/handlers"
+	"github.com/lammer90/shortener/internal/handlers/middleware"
 	"github.com/lammer90/shortener/internal/handlers/middleware/auth"
 	"github.com/lammer90/shortener/internal/handlers/middleware/compressor"
 	"github.com/lammer90/shortener/internal/handlers/middleware/logginer"
@@ -60,7 +61,7 @@ func shortenerRouter(handler handlers.ShortenerRestProvider, ping ping.Ping) chi
 
 func getActualStorage() (storage.Repository, userstorage.Repository, io.Closer, *sql.DB) {
 	if config.DataSource != "" {
-		db := InitDB("pgx", config.DataSource)
+		db := initDB("pgx", config.DataSource)
 		return dbstorage.New(db), dbuserstorage.New(db), db, db
 	} else {
 		file := openFile(config.FileStoragePath)
@@ -73,7 +74,7 @@ func openFile(path string) *os.File {
 	return file
 }
 
-func InitDB(driverName, dataSource string) *sql.DB {
+func initDB(driverName, dataSource string) *sql.DB {
 	db, err := sql.Open(driverName, dataSource)
 	if err != nil {
 		panic(err)

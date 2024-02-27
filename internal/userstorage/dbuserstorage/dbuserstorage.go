@@ -9,11 +9,13 @@ type dbUserStorage struct {
 	db *sql.DB
 }
 
+// New dbUserStorage конструткор.
 func New(db *sql.DB) dbUserStorage {
 	initDB(db)
 	return dbUserStorage{db: db}
 }
 
+// Save Сохранить пользователя.
 func (d dbUserStorage) Save(value string) error {
 	_, err := d.db.ExecContext(context.Background(), `
         INSERT INTO users
@@ -24,6 +26,7 @@ func (d dbUserStorage) Save(value string) error {
 	return err
 }
 
+// Find Найти пользователя.
 func (d dbUserStorage) Find(key string) (string, bool, error) {
 	row := d.db.QueryRowContext(context.Background(), `
         SELECT

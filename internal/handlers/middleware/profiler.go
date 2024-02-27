@@ -2,11 +2,13 @@ package middleware
 
 import (
 	"expvar"
-	"github.com/go-chi/chi/v5"
 	"net/http"
 	"net/http/pprof"
+
+	"github.com/go-chi/chi/v5"
 )
 
+// Profiler активировать работу профайлера
 func Profiler() http.Handler {
 	r := chi.NewRouter()
 

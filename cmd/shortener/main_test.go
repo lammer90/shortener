@@ -1,6 +1,12 @@
 package main
 
 import (
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/lammer90/shortener/internal/config"
 	"github.com/lammer90/shortener/internal/handlers"
 	"github.com/lammer90/shortener/internal/handlers/middleware/auth"
@@ -11,11 +17,6 @@ import (
 	"github.com/lammer90/shortener/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"io"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
 )
 
 type userAndValue struct {

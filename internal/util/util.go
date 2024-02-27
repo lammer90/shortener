@@ -1,22 +1,15 @@
 package util
 
 import (
-	"net/http"
 	"strings"
 )
 
-func CheckContentHeader(req *http.Request) bool {
-	val, ok := req.Header["Content-Type"]
-	if ok {
-		return strings.Contains(val[0], "text/plain")
-	}
-	return false
-}
-
+// ValidPostURL валидировать post url.
 func ValidPostURL(url string) bool {
 	return url == "/"
 }
 
+// ValidGetURL валидировать get url.
 func ValidGetURL(url string) bool {
 	return strings.Count(url, "/") == 1
 }

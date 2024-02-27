@@ -1,46 +1,50 @@
 package async
 
 import (
+	"time"
+
 	"github.com/lammer90/shortener/internal/service/deleter"
 	"github.com/lammer90/shortener/internal/storage"
-	"time"
 )
 
-type Batch struct {
+type batch struct {
 	URLs   []string
 	UserID string
 }
 
-func newBatch(urls []string, userID string) *Batch {
-	return &Batch{urls, userID}
+func newBatch(urls []string, userID string) *batch {
+	return &batch{urls, userID}
 }
 
+// Deleter Обработчик для удаления ссылок.
 type Deleter struct {
 	repository storage.Repository
 	jobs       chan *deleter.DeletingURL
-	batch      chan *Batch
+	batch      chan *batch
 }
 
-func New(repository storage.Repository, workers int) (deleter.DeleteProvider, chan *deleter.DeletingURL, chan *Batch) {
+// New Deleter Конструктор.
+func New(repository storage.Repository, workers int) (deleter.DeleteProvider, chan *deleter.DeletingURL, chan *batch) {
 	del := Deleter{
 		repository,
 		make(chan *deleter.DeletingURL, 5),
-		make(chan *Batch, 5),
+		make(chan *batch, 5),
 	}
-	go del.InitJobsWorker()
+	go del.initJobsWorker()
 	for w := 1; w <= workers; w++ {
-		go del.InitBatchWorker()
+		go del.initBatchWorker()
 	}
 	return del, del.jobs, del.batch
 }
 
+// Delete Удалить ссылки.
 func (d Deleter) Delete(message *deleter.DeleteMessage) {
 	for _, url := range message.DeletingURLs {
 		d.jobs <- url
 	}
 }
 
-func (d Deleter) InitJobsWorker() {
+func (d Deleter) initJobsWorker() {
 	ticker := time.NewTicker(2 * time.Second)
 
 	var urls []string
@@ -69,7 +73,7 @@ func (d Deleter) InitJobsWorker() {
 	}
 }
 
-func (d Deleter) InitBatchWorker() {
+func (d Deleter) initBatchWorker() {
 	for b := range d.batch {
 		d.repository.Delete(b.URLs, b.UserID)
 	}
