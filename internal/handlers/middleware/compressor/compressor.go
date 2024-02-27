@@ -56,6 +56,7 @@ type compressWriter struct {
 	zw *gzip.Writer
 }
 
+// newCompressWriter compressWriter Конструтор
 func newCompressWriter(w http.ResponseWriter) *compressWriter {
 	return &compressWriter{
 		ResponseWriter: w,
@@ -63,10 +64,12 @@ func newCompressWriter(w http.ResponseWriter) *compressWriter {
 	}
 }
 
+// Write Записать
 func (c *compressWriter) Write(p []byte) (int, error) {
 	return c.zw.Write(p)
 }
 
+// Close Закрыть
 func (c *compressWriter) Close() error {
 	return c.zw.Close()
 }
