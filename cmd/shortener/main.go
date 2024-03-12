@@ -1,11 +1,18 @@
 package main
 
 import (
+	"io"
+	"net/http"
+	"os"
+
 	"database/sql"
+
 	"github.com/go-chi/chi/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
+
 	"github.com/lammer90/shortener/internal/config"
 	"github.com/lammer90/shortener/internal/handlers"
+	"github.com/lammer90/shortener/internal/handlers/middleware"
 	"github.com/lammer90/shortener/internal/handlers/middleware/auth"
 	"github.com/lammer90/shortener/internal/handlers/middleware/compressor"
 	"github.com/lammer90/shortener/internal/handlers/middleware/logginer"
@@ -20,29 +27,28 @@ import (
 	"github.com/lammer90/shortener/internal/userstorage"
 	"github.com/lammer90/shortener/internal/userstorage/dbuserstorage"
 	"github.com/lammer90/shortener/internal/userstorage/inmemoryuser"
-	"io"
-	"net/http"
-	"os"
 )
 
 func main() {
 	config.InitConfig()
 	logger.InitLogger("info")
 	st, userSt, cl, db := getActualStorage()
-	delProvider, ch1, ch2 := async.New(st)
+	delProvider, ch1, ch2 := async.New(st, 3)
 	defer cl.Close()
 	defer close(ch1)
 	defer close(ch2)
-	http.ListenAndServe(config.ServAddress, shortenerRouter(
+	r := shortenerRouter(
 		auth.New(userSt, config.PrivateKey,
 			compressor.New(
 				logginer.New(
 					handlers.New(st, base64generator.New(), config.BaseURL, delProvider)))),
-		ping.New(db)))
+		ping.New(db))
+	http.ListenAndServe(config.ServAddress, r)
 }
 
 func shortenerRouter(handler handlers.ShortenerRestProvider, ping ping.Ping) chi.Router {
 	r := chi.NewRouter()
+	r.Mount("/debug", middleware.Profiler())
 	r.Post("/", handler.SaveShortURL)
 	r.Get("/{short}", handler.FindByShortURL)
 	r.Post("/api/shorten", handler.SaveShortURLApi)
@@ -55,7 +61,7 @@ func shortenerRouter(handler handlers.ShortenerRestProvider, ping ping.Ping) chi
 
 func getActualStorage() (storage.Repository, userstorage.Repository, io.Closer, *sql.DB) {
 	if config.DataSource != "" {
-		db := InitDB("pgx", config.DataSource)
+		db := initDB("pgx", config.DataSource)
 		return dbstorage.New(db), dbuserstorage.New(db), db, db
 	} else {
 		file := openFile(config.FileStoragePath)
@@ -68,7 +74,7 @@ func openFile(path string) *os.File {
 	return file
 }
 
-func InitDB(driverName, dataSource string) *sql.DB {
+func initDB(driverName, dataSource string) *sql.DB {
 	db, err := sql.Open(driverName, dataSource)
 	if err != nil {
 		panic(err)

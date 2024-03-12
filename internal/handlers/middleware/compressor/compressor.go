@@ -2,42 +2,51 @@ package compressor
 
 import (
 	"compress/gzip"
-	"github.com/lammer90/shortener/internal/handlers"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/lammer90/shortener/internal/handlers"
 )
 
+// Compressor фильтр
 type Compressor struct {
 	shortener handlers.ShortenerRestProviderWithContext
 }
 
+// New Compressor констуктор
 func New(shortener handlers.ShortenerRestProviderWithContext) handlers.ShortenerRestProviderWithContext {
 	return Compressor{
 		shortener,
 	}
 }
 
+// SaveShortURL сократить оригинальную ссылку(ссылка в параметре), в ответ будет возвращена сокращенная.
 func (c Compressor) SaveShortURL(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
 	compress(res, req, ctx, c.shortener.SaveShortURL)
 }
 
+// FindByShortURL найти оригинальную ссылку по сокращенной.
 func (c Compressor) FindByShortURL(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
 	compress(res, req, ctx, c.shortener.FindByShortURL)
 }
 
+// SaveShortURLApi сократить оригинальную ссылку(ссылка в теле запроса), в ответ будет возвращена сокращенная.
 func (c Compressor) SaveShortURLApi(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
 	compress(res, req, ctx, c.shortener.SaveShortURLApi)
 }
 
+// SaveShortURLBatch сократить несколько ссылок батчом, в ответ будет возвращена сокращенная.
 func (c Compressor) SaveShortURLBatch(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
 	compress(res, req, ctx, c.shortener.SaveShortURLBatch)
 }
 
+// FindURLByUser найти все ссылки сокращенные пользователем.
 func (c Compressor) FindURLByUser(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
 	compress(res, req, ctx, c.shortener.FindURLByUser)
 }
 
+// Delete Удалить созраненные ссылки.
 func (c Compressor) Delete(res http.ResponseWriter, req *http.Request, ctx *handlers.RequestContext) {
 	compress(res, req, ctx, c.shortener.Delete)
 }
@@ -47,6 +56,7 @@ type compressWriter struct {
 	zw *gzip.Writer
 }
 
+// newCompressWriter compressWriter Конструтор
 func newCompressWriter(w http.ResponseWriter) *compressWriter {
 	return &compressWriter{
 		ResponseWriter: w,
@@ -54,10 +64,12 @@ func newCompressWriter(w http.ResponseWriter) *compressWriter {
 	}
 }
 
+// Write Записать
 func (c *compressWriter) Write(p []byte) (int, error) {
 	return c.zw.Write(p)
 }
 
+// Close Закрыть
 func (c *compressWriter) Close() error {
 	return c.zw.Close()
 }
