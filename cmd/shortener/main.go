@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -29,7 +30,15 @@ import (
 	"github.com/lammer90/shortener/internal/userstorage/inmemoryuser"
 )
 
+var (
+	buildVersion = "N/A"
+	buildDate    = "N/A"
+	buildCommit  = "N/A"
+)
+
 func main() {
+	fmt.Printf("version=%s, time=%s, commit=%s\n", buildVersion, buildDate, buildCommit)
+
 	config.InitConfig()
 	logger.InitLogger("info")
 	st, userSt, cl, db := getActualStorage()
