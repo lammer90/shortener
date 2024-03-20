@@ -93,20 +93,21 @@ func runExitCallerAnalyzer(pass *analysis.Pass) (interface{}, error) {
 		if fn.Synthetic == "package initializer" {
 			continue
 		}
-		if fn.Pkg.Pkg.Name() == "main" && fn.Name() == "main" {
-			for _, b := range fn.Blocks {
-				for _, i := range b.Instrs {
-					call, ok := i.(*ssa.Call)
-					if !ok {
-						continue
-					}
-					obj := call.Common().StaticCallee()
-					if obj == nil {
-						continue
-					}
-					if obj.Pkg != nil && obj.Pkg.Pkg.Path() == "os" && obj.Name() == "Exit" {
-						pass.Reportf(call.Pos(), "direct call to os.Exit detected in main function")
-					}
+		if fn.Pkg.Pkg.Name() != "main" || fn.Name() != "main" {
+			continue
+		}
+		for _, b := range fn.Blocks {
+			for _, i := range b.Instrs {
+				call, ok := i.(*ssa.Call)
+				if !ok {
+					continue
+				}
+				obj := call.Common().StaticCallee()
+				if obj == nil {
+					continue
+				}
+				if obj.Pkg != nil && obj.Pkg.Pkg.Path() == "os" && obj.Name() == "Exit" {
+					pass.Reportf(call.Pos(), "direct call to os.Exit detected in main function")
 				}
 			}
 		}
