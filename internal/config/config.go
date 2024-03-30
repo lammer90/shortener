@@ -20,6 +20,9 @@ var DataSource string
 // PrivateKey Приватный ключ для подписи jwt токена
 var PrivateKey string
 
+// EnableHTTPS Флаг включения HTTPS сервера
+var EnableHTTPS bool
+
 // InitConfig Инизиализация всех параметров
 func InitConfig() {
 	initFlags()
@@ -32,6 +35,7 @@ func initFlags() {
 	flag.StringVar(&FileStoragePath, "f", "/tmp/short-url-db.json", "File storage path")
 	flag.StringVar(&DataSource, "d", "", "DataSource path")
 	flag.StringVar(&PrivateKey, "p", "privateKey", "PrivateKey for jwt auth")
+	flag.BoolVar(&EnableHTTPS, "s", false, "Enable HTTPS")
 	flag.Parse()
 }
 
@@ -54,5 +58,9 @@ func initEnv() {
 
 	if privateKey := os.Getenv("PRIVATE_KEY"); privateKey != "" {
 		PrivateKey = privateKey
+	}
+
+	if enableHTTPS := os.Getenv(" ENABLE_HTTPS"); enableHTTPS != "" {
+		EnableHTTPS = true
 	}
 }
