@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"os"
 
+	"golang.org/x/crypto/acme/autocert"
+
 	"github.com/lammer90/shortener/internal/logger"
 	"go.uber.org/zap"
 
@@ -56,7 +58,22 @@ func main() {
 				logginer.New(
 					handlers.New(st, base64generator.New(), config.BaseURL, delProvider)))),
 		ping.New(db))
-	http.ListenAndServe(config.ServAddress, r)
+
+	if config.EnableHTTPS {
+		manager := &autocert.Manager{
+			Cache:      autocert.DirCache("cache-dir"),
+			Prompt:     autocert.AcceptTOS,
+			HostPolicy: autocert.HostWhitelist("mysite.ru", "www.mysite.ru"),
+		}
+		server := &http.Server{
+			Addr:      ":443",
+			Handler:   r,
+			TLSConfig: manager.TLSConfig(),
+		}
+		server.ListenAndServeTLS("", "")
+	} else {
+		http.ListenAndServe(config.ServAddress, r)
+	}
 }
 
 func shortenerRouter(handler handlers.ShortenerRestProvider, ping ping.Ping) chi.Router {
