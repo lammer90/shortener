@@ -5,6 +5,9 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/lammer90/shortener/internal/logger"
+	"go.uber.org/zap"
+
 	"database/sql"
 
 	"github.com/go-chi/chi/v5"
@@ -17,7 +20,6 @@ import (
 	"github.com/lammer90/shortener/internal/handlers/middleware/compressor"
 	"github.com/lammer90/shortener/internal/handlers/middleware/logginer"
 	"github.com/lammer90/shortener/internal/handlers/ping"
-	"github.com/lammer90/shortener/internal/logger"
 	"github.com/lammer90/shortener/internal/service/deleter/async"
 	"github.com/lammer90/shortener/internal/storage"
 	"github.com/lammer90/shortener/internal/storage/dbstorage"
@@ -29,9 +31,20 @@ import (
 	"github.com/lammer90/shortener/internal/userstorage/inmemoryuser"
 )
 
+var (
+	buildVersion = "N/A"
+	buildDate    = "N/A"
+	buildCommit  = "N/A"
+)
+
 func main() {
-	config.InitConfig()
 	logger.InitLogger("info")
+	logger.Log.Info("Starting shortener app",
+		zap.String("version", buildVersion),
+		zap.String("time", buildDate),
+		zap.String("commit", buildCommit))
+
+	config.InitConfig()
 	st, userSt, cl, db := getActualStorage()
 	delProvider, ch1, ch2 := async.New(st, 3)
 	defer cl.Close()
