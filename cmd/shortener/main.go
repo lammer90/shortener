@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"golang.org/x/crypto/acme/autocert"
 
@@ -59,21 +62,43 @@ func main() {
 					handlers.New(st, base64generator.New(), config.BaseURL, delProvider)))),
 		ping.New(db))
 
+	var server *http.Server
 	if config.EnableHTTPS {
 		manager := &autocert.Manager{
 			Cache:      autocert.DirCache("cache-dir"),
 			Prompt:     autocert.AcceptTOS,
 			HostPolicy: autocert.HostWhitelist("mysite.ru", "www.mysite.ru"),
 		}
-		server := &http.Server{
+		server = &http.Server{
 			Addr:      ":443",
 			Handler:   r,
 			TLSConfig: manager.TLSConfig(),
 		}
+	} else {
+		server = &http.Server{
+			Addr:    config.ServAddress,
+			Handler: r,
+		}
+	}
+
+	idleConnsClosed := make(chan struct{})
+	sigint := make(chan os.Signal, 1)
+	signal.Notify(sigint, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
+	go func() {
+		<-sigint
+		if err := server.Shutdown(context.Background()); err != nil {
+			logger.Log.Error("HTTP server Shutdown: %v", zap.Error(err))
+		}
+		close(idleConnsClosed)
+	}()
+
+	if config.EnableHTTPS {
 		server.ListenAndServeTLS("", "")
 	} else {
-		http.ListenAndServe(config.ServAddress, r)
+		server.ListenAndServe()
 	}
+
+	<-idleConnsClosed
 }
 
 func shortenerRouter(handler handlers.ShortenerRestProvider, ping ping.Ping) chi.Router {
