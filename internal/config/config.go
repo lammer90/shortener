@@ -1,8 +1,11 @@
 package config
 
 import (
+	"encoding/json"
 	"flag"
 	"os"
+
+	"github.com/lammer90/shortener/internal/logger"
 )
 
 // ServAddress Адрес старта веб-сервера
@@ -23,6 +26,9 @@ var PrivateKey string
 // EnableHTTPS Флаг включения HTTPS сервера
 var EnableHTTPS bool
 
+// FileConfig Флаг включения HTTPS сервера
+var FileConfig string
+
 // InitConfig Инизиализация всех параметров
 func InitConfig() {
 	initFlags()
@@ -36,6 +42,7 @@ func initFlags() {
 	flag.StringVar(&DataSource, "d", "", "DataSource path")
 	flag.StringVar(&PrivateKey, "p", "privateKey", "PrivateKey for jwt auth")
 	flag.BoolVar(&EnableHTTPS, "s", false, "Enable HTTPS")
+	flag.StringVar(&FileConfig, "c", "", "FileConfig path")
 	flag.Parse()
 }
 
@@ -62,5 +69,56 @@ func initEnv() {
 
 	if enableHTTPS := os.Getenv(" ENABLE_HTTPS"); enableHTTPS != "" {
 		EnableHTTPS = true
+	}
+
+	if fileConfig := os.Getenv("CONFIG"); fileConfig != "" {
+		FileConfig = fileConfig
+	}
+
+	if FileConfig != "" {
+		readConfigFromFile(FileConfig)
+	}
+}
+
+type Config struct {
+	ServerAddress   string `json:"server_address"`
+	BaseURL         string `json:"base_url"`
+	FileStoragePath string `json:"file_storage_path"`
+	DatabaseDSN     string `json:"database_dsn"`
+	EnableHTTPS     bool   `json:"enable_https"`
+}
+
+func readConfigFromFile(fileConfig string) {
+	data, err := os.ReadFile(fileConfig)
+	if err != nil {
+		logger.Log.Error("Ошибка чтения файла конфигурации")
+		return
+	}
+
+	var config Config
+	err = json.Unmarshal(data, &config)
+	if err != nil {
+		logger.Log.Error("Ошибка распаковки файла конфигурации")
+		return
+	}
+
+	if ServAddress == "" && config.ServerAddress != "" {
+		ServAddress = config.ServerAddress
+	}
+
+	if BaseURL == "" && config.BaseURL != "" {
+		BaseURL = config.BaseURL
+	}
+
+	if FileStoragePath == "" && config.FileStoragePath != "" {
+		FileStoragePath = config.FileStoragePath
+	}
+
+	if DataSource == "" && config.DatabaseDSN != "" {
+		DataSource = config.DatabaseDSN
+	}
+
+	if !EnableHTTPS && config.EnableHTTPS {
+		EnableHTTPS = config.EnableHTTPS
 	}
 }
