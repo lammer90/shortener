@@ -80,7 +80,7 @@ func initEnv() {
 	}
 }
 
-type Config struct {
+type configStruct struct {
 	ServerAddress   string `json:"server_address"`
 	BaseURL         string `json:"base_url"`
 	FileStoragePath string `json:"file_storage_path"`
@@ -95,7 +95,7 @@ func readConfigFromFile(fileConfig string) {
 		return
 	}
 
-	var config Config
+	var config configStruct
 	err = json.Unmarshal(data, &config)
 	if err != nil {
 		logger.Log.Error("Ошибка распаковки файла конфигурации")
