@@ -30,9 +30,9 @@ var EnableHTTPS bool
 var FileConfig string
 
 // InitConfig Инизиализация всех параметров
-func InitConfig() {
+func InitConfig() error {
 	initFlags()
-	initEnv()
+	return initEnv()
 }
 
 func initFlags() {
@@ -46,7 +46,7 @@ func initFlags() {
 	flag.Parse()
 }
 
-func initEnv() {
+func initEnv() error {
 	if envServAddr := os.Getenv("SERVER_ADDRESS"); envServAddr != "" {
 		ServAddress = envServAddr
 	}
@@ -76,8 +76,9 @@ func initEnv() {
 	}
 
 	if FileConfig != "" {
-		readConfigFromFile(FileConfig)
+		return readConfigFromFile(FileConfig)
 	}
+	return nil
 }
 
 type configStruct struct {
@@ -88,18 +89,18 @@ type configStruct struct {
 	EnableHTTPS     bool   `json:"enable_https"`
 }
 
-func readConfigFromFile(fileConfig string) {
+func readConfigFromFile(fileConfig string) error {
 	data, err := os.ReadFile(fileConfig)
 	if err != nil {
 		logger.Log.Error("Ошибка чтения файла конфигурации")
-		return
+		return err
 	}
 
 	var config configStruct
 	err = json.Unmarshal(data, &config)
 	if err != nil {
 		logger.Log.Error("Ошибка распаковки файла конфигурации")
-		return
+		return err
 	}
 
 	if ServAddress == "" && config.ServerAddress != "" {
@@ -121,4 +122,5 @@ func readConfigFromFile(fileConfig string) {
 	if !EnableHTTPS && config.EnableHTTPS {
 		EnableHTTPS = config.EnableHTTPS
 	}
+	return nil
 }

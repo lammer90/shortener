@@ -49,7 +49,11 @@ func main() {
 		zap.String("time", buildDate),
 		zap.String("commit", buildCommit))
 
-	config.InitConfig()
+	err := config.InitConfig()
+	if err != nil {
+		os.Exit(1)
+	}
+
 	st, userSt, cl, db := getActualStorage()
 	delProvider, ch1, ch2 := async.New(st, 3)
 	defer cl.Close()
