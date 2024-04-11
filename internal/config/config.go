@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"os"
-
-	"github.com/lammer90/shortener/internal/logger"
 )
 
 // ServAddress Адрес старта веб-сервера
@@ -92,14 +90,12 @@ type configStruct struct {
 func readConfigFromFile(fileConfig string) error {
 	data, err := os.ReadFile(fileConfig)
 	if err != nil {
-		logger.Log.Error("Ошибка чтения файла конфигурации")
 		return err
 	}
 
 	var config configStruct
 	err = json.Unmarshal(data, &config)
 	if err != nil {
-		logger.Log.Error("Ошибка распаковки файла конфигурации")
 		return err
 	}
 
