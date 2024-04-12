@@ -29,10 +29,10 @@ var EnableHTTPS bool
 var FileConfig string
 
 // ErrDidntReadConfigFile Не удалось прочитать файл конфигурации
-var ErrDidntReadConfigFile = errors.New("Не удалось прочитать файл конфигурации")
+var ErrDidntReadConfigFile = errors.New("не удалось прочитать файл конфигурации")
 
 // ErrDidntParseConfigFile Не удалось спарсить файл конфигурации
-var ErrDidntParseConfigFile = errors.New("Не удалось спарсить файл конфигурации")
+var ErrDidntParseConfigFile = errors.New("не удалось спарсить файл конфигурации")
 
 // InitConfig Инизиализация всех параметров
 func InitConfig() error {
