@@ -47,7 +47,7 @@ func initFlags() {
 	flag.StringVar(&DataSource, "d", "", "DataSource path")
 	flag.StringVar(&PrivateKey, "p", "privateKey", "PrivateKey for jwt auth")
 	flag.BoolVar(&EnableHTTPS, "s", false, "Enable HTTPS")
-	flag.StringVar(&FileConfig, "k", "", "FileConfig path")
+	flag.StringVar(&FileConfig, "m", "", "FileConfig path")
 	flag.Parse()
 }
 
