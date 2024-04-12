@@ -51,7 +51,7 @@ func main() {
 
 	err := config.InitConfig()
 	if err != nil {
-		logger.Log.Fatal("Ошибка чтения файла конфигурации")
+		logger.Log.Fatal("Ошибка загрузки конфигурации: " + err.Error())
 	}
 
 	st, userSt, cl, db := getActualStorage()

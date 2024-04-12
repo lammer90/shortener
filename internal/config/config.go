@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"os"
 )
@@ -26,6 +27,12 @@ var EnableHTTPS bool
 
 // FileConfig Флаг включения HTTPS сервера
 var FileConfig string
+
+// ErrDidntReadConfigFile Не удалось прочитать файл конфигурации
+var ErrDidntReadConfigFile = errors.New("Не удалось прочитать файл конфигурации")
+
+// ErrDidntParseConfigFile Не удалось спарсить файл конфигурации
+var ErrDidntParseConfigFile = errors.New("Не удалось спарсить файл конфигурации")
 
 // InitConfig Инизиализация всех параметров
 func InitConfig() error {
@@ -90,13 +97,13 @@ type configStruct struct {
 func readConfigFromFile(fileConfig string) error {
 	data, err := os.ReadFile(fileConfig)
 	if err != nil {
-		return err
+		return ErrDidntReadConfigFile
 	}
 
 	var config configStruct
 	err = json.Unmarshal(data, &config)
 	if err != nil {
-		return err
+		return ErrDidntParseConfigFile
 	}
 
 	if ServAddress == "" && config.ServerAddress != "" {
