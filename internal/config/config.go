@@ -1,7 +1,9 @@
 package config
 
 import (
+	"encoding/json"
 	"flag"
+	"fmt"
 	"os"
 )
 
@@ -20,10 +22,16 @@ var DataSource string
 // PrivateKey Приватный ключ для подписи jwt токена
 var PrivateKey string
 
+// EnableHTTPS Флаг включения HTTPS сервера
+var EnableHTTPS bool
+
+// FileConfig Флаг включения HTTPS сервера
+var FileConfig string
+
 // InitConfig Инизиализация всех параметров
-func InitConfig() {
+func InitConfig() error {
 	initFlags()
-	initEnv()
+	return initEnv()
 }
 
 func initFlags() {
@@ -32,10 +40,12 @@ func initFlags() {
 	flag.StringVar(&FileStoragePath, "f", "/tmp/short-url-db.json", "File storage path")
 	flag.StringVar(&DataSource, "d", "", "DataSource path")
 	flag.StringVar(&PrivateKey, "p", "privateKey", "PrivateKey for jwt auth")
+	flag.BoolVar(&EnableHTTPS, "s", false, "Enable HTTPS")
+	flag.StringVar(&FileConfig, "m", "", "FileConfig path")
 	flag.Parse()
 }
 
-func initEnv() {
+func initEnv() error {
 	if envServAddr := os.Getenv("SERVER_ADDRESS"); envServAddr != "" {
 		ServAddress = envServAddr
 	}
@@ -55,4 +65,59 @@ func initEnv() {
 	if privateKey := os.Getenv("PRIVATE_KEY"); privateKey != "" {
 		PrivateKey = privateKey
 	}
+
+	if enableHTTPS := os.Getenv(" ENABLE_HTTPS"); enableHTTPS != "" {
+		EnableHTTPS = true
+	}
+
+	if fileConfig := os.Getenv("CONFIG"); fileConfig != "" {
+		FileConfig = fileConfig
+	}
+
+	if FileConfig != "" {
+		return readConfigFromFile(FileConfig)
+	}
+	return nil
+}
+
+type configStruct struct {
+	ServerAddress   string `json:"server_address"`
+	BaseURL         string `json:"base_url"`
+	FileStoragePath string `json:"file_storage_path"`
+	DatabaseDSN     string `json:"database_dsn"`
+	EnableHTTPS     bool   `json:"enable_https"`
+}
+
+func readConfigFromFile(fileConfig string) error {
+	data, err := os.ReadFile(fileConfig)
+	if err != nil {
+		return fmt.Errorf("не удалось прочитать файл конфигурации: %w", err)
+	}
+
+	var config configStruct
+	err = json.Unmarshal(data, &config)
+	if err != nil {
+		return fmt.Errorf("не удалось спарсить файл конфигурации: %w", err)
+	}
+
+	if ServAddress == "" && config.ServerAddress != "" {
+		ServAddress = config.ServerAddress
+	}
+
+	if BaseURL == "" && config.BaseURL != "" {
+		BaseURL = config.BaseURL
+	}
+
+	if FileStoragePath == "" && config.FileStoragePath != "" {
+		FileStoragePath = config.FileStoragePath
+	}
+
+	if DataSource == "" && config.DatabaseDSN != "" {
+		DataSource = config.DatabaseDSN
+	}
+
+	if !EnableHTTPS && config.EnableHTTPS {
+		EnableHTTPS = config.EnableHTTPS
+	}
+	return nil
 }

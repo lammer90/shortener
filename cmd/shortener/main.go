@@ -1,9 +1,14 @@
 package main
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+
+	"golang.org/x/crypto/acme/autocert"
 
 	"github.com/lammer90/shortener/internal/logger"
 	"go.uber.org/zap"
@@ -44,7 +49,11 @@ func main() {
 		zap.String("time", buildDate),
 		zap.String("commit", buildCommit))
 
-	config.InitConfig()
+	err := config.InitConfig()
+	if err != nil {
+		logger.Log.Fatal("Ошибка чтения файла конфигурации", zap.Error(err))
+	}
+
 	st, userSt, cl, db := getActualStorage()
 	delProvider, ch1, ch2 := async.New(st, 3)
 	defer cl.Close()
@@ -56,7 +65,44 @@ func main() {
 				logginer.New(
 					handlers.New(st, base64generator.New(), config.BaseURL, delProvider)))),
 		ping.New(db))
-	http.ListenAndServe(config.ServAddress, r)
+
+	var server *http.Server
+	if config.EnableHTTPS {
+		manager := &autocert.Manager{
+			Cache:      autocert.DirCache("cache-dir"),
+			Prompt:     autocert.AcceptTOS,
+			HostPolicy: autocert.HostWhitelist("mysite.ru", "www.mysite.ru"),
+		}
+		server = &http.Server{
+			Addr:      ":443",
+			Handler:   r,
+			TLSConfig: manager.TLSConfig(),
+		}
+	} else {
+		server = &http.Server{
+			Addr:    config.ServAddress,
+			Handler: r,
+		}
+	}
+
+	idleConnsClosed := make(chan struct{})
+	sigint := make(chan os.Signal, 1)
+	signal.Notify(sigint, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
+	go func() {
+		<-sigint
+		if err := server.Shutdown(context.Background()); err != nil {
+			logger.Log.Error("HTTP server Shutdown: %v", zap.Error(err))
+		}
+		close(idleConnsClosed)
+	}()
+
+	if config.EnableHTTPS {
+		server.ListenAndServeTLS("", "")
+	} else {
+		server.ListenAndServe()
+	}
+
+	<-idleConnsClosed
 }
 
 func shortenerRouter(handler handlers.ShortenerRestProvider, ping ping.Ping) chi.Router {
